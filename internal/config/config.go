@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -36,6 +37,7 @@ func ReadFlags(c Config) error {
 
 	err := rootCmd.Execute()
 	if err != nil {
+		logrus.Fatalf("Unsuccessful attempt to read flags: %v", err)
 		return err
 	}
 

@@ -2,15 +2,18 @@ package main
 
 import (
 	"github.com/StarkovPO/Go-shop-final/internal/config"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	c, err := config.Init()
 	if err != nil {
-		log.Fatalf("init configuration: %s", err)
+		logrus.Fatalf("init configuration: %s", err)
 	}
 
 	err = initApp(c)
+	if err != nil {
+		logrus.Fatalf("unsuccessful initilization app: %v", err)
+	}
 
 }
