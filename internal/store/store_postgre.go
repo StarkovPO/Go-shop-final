@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"time"
 )
 
@@ -48,8 +49,32 @@ func MustPostgresConnection(c config.Config) *sqlx.DB {
 }
 
 func MakeDB(db sqlx.DB) error {
-	if _, err := db.Exec(createURLTable); err != nil {
+
+	if _, err := db.Exec(createUserTable); err != nil {
 		return fmt.Errorf("error while run migrations %v", err)
 	}
+	if _, err := db.Exec(createOrderTable); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+	if _, err := db.Exec(createBalanceTable); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+	if _, err := db.Exec(createWithdrawTable); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+
+	if _, err := db.Exec(createBalanceForeignKey); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+	if _, err := db.Exec(createOrderForeignKey); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+	if _, err := db.Exec(createWithdrawForeignKey); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+	if _, err := db.Exec(createWithdrawForeignKey2); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+
 	return nil
 }

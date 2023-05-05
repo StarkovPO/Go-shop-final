@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"context"
@@ -17,29 +17,14 @@ import (
 	"time"
 )
 
-type Application struct {
-	Store   store.Store
-	Config  config.Config
-	Service service.Service
-}
+func initApp(c config.Config) error {
 
-func NewApplication(s store.Store, c config.Config, o service.Service) Application {
-	return Application{
-		Store:   s,
-		Config:  c,
-		Service: o,
-	}
-}
+	db := store.NewPostgres(store.MustPostgresConnection(c))
+	s := service.NewService(db, c)
+	router := setupAPI(s)
 
-func SetupAPI(s service.Service) *mux.Router {
-	router := mux.NewRouter()
-	router.HandleFunc("/ping", handler.Test(s)).Methods(http.MethodGet)
-
-	return router
-
-}
-
-func Run(ctx context.Context, c config.Config, router *mux.Router) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	cancelChan := make(chan os.Signal, 1)
 	signal.Notify(cancelChan, syscall.SIGTERM, syscall.SIGINT)
@@ -73,4 +58,12 @@ func Run(ctx context.Context, c config.Config, router *mux.Router) error {
 
 	log.Println("Server shutdown successfully")
 	return nil
+}
+
+func setupAPI(s service.ServiceInteface) *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/ping", handler.Test(s)).Methods(http.MethodGet)
+
+	return router
+
 }
