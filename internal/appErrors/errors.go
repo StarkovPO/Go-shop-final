@@ -6,9 +6,11 @@ import (
 )
 
 var (
-	ErrBadRequest        = NewAppError(nil, "Bad request", "request in not supported format")
-	ErrLoginAlreadyExist = NewAppError(nil, "Login already exist", "User with this login already exist in DB")
-	ErrCreateUser        = NewAppError(nil, "Something went wrong", "Executing query to create user ")
+	ErrBadRequest         = NewAppError(nil, "Bad request", "request in not supported format")
+	ErrLoginAlreadyExist  = NewAppError(nil, "Login already exist", "User with this login already exist in DB")
+	ErrCreateUser         = NewAppError(nil, "Something went wrong", "Executing query to create user ")
+	ErrInvalidAuthHeader  = NewAppError(nil, "Invalid auth header", "Token do not contain Bearer or body")
+	ErrInvalidLoginOrPass = NewAppError(nil, "Invalid login or password", "User tried to login via incorrect login or pass")
 )
 
 type AppError struct {

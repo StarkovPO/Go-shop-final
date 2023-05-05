@@ -17,10 +17,10 @@ func NewStore(db Postgres) Store {
 
 func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 
-	timestamp := time.Now().Unix()
+	timestamp := time.Now()
 
 	stmt, err := o.db.db.PrepareContext(ctx, `
-        INSERT INTO Users (id, login, password_hash, created_at)
+        INSERT INTO users (id, login, password_hash, created_at)
         VALUES ($1, $2, $3, $4)
     `)
 	if err != nil {
@@ -48,4 +48,16 @@ func (o *Store) CheckLogin(ctx context.Context, login string) bool {
 		}
 	}
 	return exist
+}
+
+func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
+	var hash string
+
+	err := o.db.db.QueryRowContext(ctx, `SELECT password_hash FROM users WHERE login = $1`, login).Scan(&hash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", false
+		}
+	}
+	return hash, true
 }

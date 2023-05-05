@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/StarkovPO/Go-shop-final/internal/handler"
+	"github.com/StarkovPO/Go-shop-final/internal/middleware"
 	"github.com/StarkovPO/Go-shop-final/internal/service"
 	"github.com/StarkovPO/Go-shop-final/internal/store"
 	"github.com/gorilla/mux"
@@ -65,7 +66,9 @@ func initApp(c config.Config) error {
 func setupAPI(s service.Service) *mux.Router {
 
 	router := mux.NewRouter()
+	router.Use(middleware.CheckToken)
 	router.HandleFunc("/api/user/register", handler.RegisterUser(&s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/login", handler.LoginUser(&s)).Methods(http.MethodPost)
 
 	return router
 

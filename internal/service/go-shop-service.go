@@ -21,6 +21,7 @@ const (
 type StoreInterface interface {
 	CreateUserDB(ctx context.Context, user models.Users) error
 	CheckLogin(ctx context.Context, login string) bool
+	GetUserPass(ctx context.Context, login string) (string, bool)
 }
 
 type Service struct {
@@ -64,9 +65,37 @@ func (s *Service) CreateUser(ctx context.Context, req models.Users) (string, err
 	return token.SignedString([]byte(signingKey))
 }
 
+func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (string, error) {
+
+	passwordHash, exist := s.store.GetUserPass(ctx, req.Login)
+	if !exist {
+		return "", appErrors.ErrInvalidLoginOrPass
+	}
+
+	if isPassValid := s.comparePasswordHash(req.Password, passwordHash); isPassValid {
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
+			jwt.StandardClaims{
+				ExpiresAt: time.Now().Add(tokenTTL).Unix(),
+				IssuedAt:  time.Now().Unix(),
+			},
+			req.Id,
+		})
+
+		return token.SignedString([]byte(signingKey))
+	}
+	return "", appErrors.ErrInvalidLoginOrPass
+}
+
 func (s *Service) generatePasswordHash(password string) string {
 	hash := sha1.New()
 	hash.Write([]byte(password))
 
 	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
+}
+
+func (s *Service) comparePasswordHash(hashedPassword, password string) bool {
+	hash := sha1.New()
+	hash.Write([]byte(password))
+
+	return fmt.Sprintf("%x", hash.Sum([]byte(salt))) == hashedPassword
 }
