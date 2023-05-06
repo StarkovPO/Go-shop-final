@@ -73,13 +73,9 @@ func LoginUser(s ServiceInterface) http.HandlerFunc {
 		token, err := s.GenerateUserToken(ctx, req)
 
 		if errors.As(err, &appErr) {
-			if errors.Is(err, appErrors.ErrLoginAlreadyExist) {
+			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
 				w.WriteHeader(http.StatusUnauthorized)
 				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
-				return
-			} else if errors.Is(err, appErrors.ErrLoginAlreadyExist) {
-				w.WriteHeader(http.StatusInternalServerError)
-				_, err = w.Write(appErrors.ErrLoginAlreadyExist.Marshal())
 				return
 			}
 		}

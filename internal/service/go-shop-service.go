@@ -72,7 +72,8 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 		return "", appErrors.ErrInvalidLoginOrPass
 	}
 
-	if isPassValid := s.comparePasswordHash(req.Password, passwordHash); isPassValid {
+	isPassValid := s.comparePasswordHash(passwordHash, req.Password)
+	if isPassValid {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
 			jwt.StandardClaims{
 				ExpiresAt: time.Now().Add(tokenTTL).Unix(),

@@ -17,11 +17,11 @@ func NewStore(db Postgres) Store {
 
 func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 
-	timestamp := time.Now()
+	timestamp := time.Now().Unix()
 
 	stmt, err := o.db.db.PrepareContext(ctx, `
         INSERT INTO users (id, login, password_hash, created_at)
-        VALUES ($1, $2, $3, $4)
+        VALUES ($1, $2, $3, to_timestamp($4))
     `)
 	if err != nil {
 		return err

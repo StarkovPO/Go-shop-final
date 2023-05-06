@@ -2,15 +2,15 @@ package store
 
 const (
 	createUserTable = `CREATE TABLE IF NOT EXISTS "users" (
-        "primary_id" integer PRIMARY KEY,
+        "primary_id" SERIAL PRIMARY KEY,
         "id" varchar(36) UNIQUE,
         "login" varchar(255) UNIQUE,
-        "password_hash" varchar(60),
+        "password_hash" varchar(255),
         "created_at" timestamp NOT NULL
     )`
 
 	createOrderTable = `CREATE TABLE IF NOT EXISTS "orders" (
-        "primary_id" integer PRIMARY KEY,
+        "primary_id" SERIAL PRIMARY KEY,
         "user_id" varchar(36),
         "id" integer UNIQUE,
         "status" varchar(255) NOT NULL,
@@ -19,13 +19,13 @@ const (
     )`
 
 	createBalanceTable = `CREATE TABLE IF NOT EXISTS "balance" (
-        "primary_id" integer PRIMARY KEY,
+        "primary_id" SERIAL PRIMARY KEY,
         "user_id" varchar(36),
         "current" float
     )`
 
 	createWithdrawTable = `CREATE TABLE IF NOT EXISTS "withdrawn" (
-        "primary_id" integer PRIMARY KEY,
+        "primary_id" SERIAL PRIMARY KEY,
         "order_id" integer,
         "withdrawn" float,
         "user_id" varchar(36),

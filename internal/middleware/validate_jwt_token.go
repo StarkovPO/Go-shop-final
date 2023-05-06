@@ -16,6 +16,7 @@ func CheckToken(next http.Handler) http.Handler {
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		headerParts := strings.Split(token, " ")
