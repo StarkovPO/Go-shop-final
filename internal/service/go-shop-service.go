@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/sha1"
-	"fmt"
 	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
@@ -22,6 +20,7 @@ type StoreInterface interface {
 	CreateUserDB(ctx context.Context, user models.Users) error
 	CheckLogin(ctx context.Context, login string) bool
 	GetUserPass(ctx context.Context, login string) (string, bool)
+	CreateUserOrderDB(ctx context.Context, order models.Orders) error
 }
 
 type Service struct {
@@ -43,11 +42,11 @@ func NewService(s store.Store, c config.Config) Service {
 
 func (s *Service) CreateUser(ctx context.Context, req models.Users) (string, error) {
 
-	if exist := s.store.CheckLogin(ctx, req.Login); exist {
+	if exist := s.store.CheckLogin(ctx, req.Login); exist { // remove checker and use DB index
 		return "", appErrors.ErrLoginAlreadyExist
 	}
 
-	req.Password = s.generatePasswordHash(req.Password)
+	req.Password = generatePasswordHash(req.Password)
 	req.Id = generateUID()
 
 	if err := s.store.CreateUserDB(ctx, req); err != nil {
@@ -72,7 +71,7 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 		return "", appErrors.ErrInvalidLoginOrPass
 	}
 
-	isPassValid := s.comparePasswordHash(passwordHash, req.Password)
+	isPassValid := comparePasswordHash(passwordHash, req.Password)
 	if isPassValid {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
 			jwt.StandardClaims{
@@ -87,16 +86,20 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 	return "", appErrors.ErrInvalidLoginOrPass
 }
 
-func (s *Service) generatePasswordHash(password string) string {
-	hash := sha1.New()
-	hash.Write([]byte(password))
+func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error {
 
-	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
-}
+	if !IsOrderNumberValid(req.ID) {
+		return appErrors.ErrInvalidOrderNumber
+	}
 
-func (s *Service) comparePasswordHash(hashedPassword, password string) bool {
-	hash := sha1.New()
-	hash.Write([]byte(password))
+	res, err := getLoyaltySystem(ctx, req.ID, s.config.AccrualSystemAddressValue)
 
-	return fmt.Sprintf("%x", hash.Sum([]byte(salt))) == hashedPassword
+	if err != nil {
+		return err
+	}
+	res.UserID = req.UserID
+
+	err = s.store.CreateUserOrderDB(ctx, res)
+
+	return err
 }

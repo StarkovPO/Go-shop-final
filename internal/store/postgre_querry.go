@@ -36,4 +36,22 @@ const (
 	createBalanceForeignKey   = `ALTER TABLE "balance" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
 	createWithdrawForeignKey  = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
 	createWithdrawForeignKey2 = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("order_id") REFERENCES "orders" ("id");`
+
+	createLoginIndex   = `CREATE UNIQUE INDEX IF NOT EXISTS users_login_uindex ON public.users (login)`
+	createOrderIDIndex = `CREATE UNIQUE INDEX IF NOT EXISTS orders_id_uindex ON public.orders (id)`
+
+	createUser = `
+        INSERT INTO users (id, login, password_hash, created_at)
+        VALUES ($1, $2, $3, to_timestamp($4))
+    `
+	checkLogin = `
+        SELECT EXISTS (SELECT 1 FROM users WHERE login = $1 LIMIT 1)
+    `
+
+	getUserPass = `SELECT password_hash FROM users WHERE login = $1 LIMIT 1`
+
+	createOrder = `
+        INSERT INTO orders (user_id, id, status, accrual, uploaded_at)
+        VALUES ($1, $2, $3, $4, to_timestamp($5))
+    `
 )

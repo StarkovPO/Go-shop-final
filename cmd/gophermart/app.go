@@ -69,6 +69,7 @@ func setupAPI(s service.Service) *mux.Router {
 	router.Use(middleware.CheckToken)
 	router.HandleFunc("/api/user/register", handler.RegisterUser(&s)).Methods(http.MethodPost)
 	router.HandleFunc("/api/user/login", handler.LoginUser(&s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/orders", handler.CreateOrder(&s)).Methods(http.MethodPost)
 
 	return router
 

@@ -11,6 +11,9 @@ var (
 	ErrCreateUser         = NewAppError(nil, "Something went wrong", "Executing query to create user ")
 	ErrInvalidAuthHeader  = NewAppError(nil, "Invalid auth header", "Token do not contain Bearer or body")
 	ErrInvalidLoginOrPass = NewAppError(nil, "Invalid login or password", "User tried to login via incorrect login or pass")
+	ErrInvalidOrderNumber = NewAppError(nil, "Invalid or empty order number", "Order number is not valid. Checked by Luhn")
+	ErrOrderAlreadyExist  = NewAppError(nil, "Order already belong to another user", "User tried to connect existed user's order")
+	ErrOrderAlreadyBelong = NewAppError(nil, "Order already belong to current user", "User tried to connect again his order")
 )
 
 type AppError struct {

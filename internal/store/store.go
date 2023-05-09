@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -19,10 +20,7 @@ func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 
 	timestamp := time.Now().Unix()
 
-	stmt, err := o.db.db.PrepareContext(ctx, `
-        INSERT INTO users (id, login, password_hash, created_at)
-        VALUES ($1, $2, $3, to_timestamp($4))
-    `)
+	stmt, err := o.db.db.PrepareContext(ctx, createUser)
 	if err != nil {
 		return err
 	}
@@ -32,6 +30,10 @@ func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 		return err
 	}
 
+	if err := stmt.Close(); err != nil {
+		logrus.Warnf("attention error closing statment: %v", err)
+	}
+
 	return nil
 }
 
@@ -39,25 +41,58 @@ func (o *Store) CheckLogin(ctx context.Context, login string) bool {
 
 	var exist bool
 
-	err := o.db.db.QueryRowContext(ctx, `
-        SELECT EXISTS (SELECT 1 FROM users WHERE login = $1)
-    `, login).Scan(&exist)
+	stmt, err := o.db.db.PrepareContext(ctx, checkLogin)
+
+	err = stmt.QueryRowContext(ctx, login).Scan(&exist)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false
 		}
 	}
+
+	if err := stmt.Close(); err != nil {
+		logrus.Warnf("attention error closing statment: %v", err)
+	}
+
 	return exist
 }
 
 func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
 	var hash string
 
-	err := o.db.db.QueryRowContext(ctx, `SELECT password_hash FROM users WHERE login = $1`, login).Scan(&hash)
+	stmt, err := o.db.db.PrepareContext(ctx, getUserPass)
+
+	err = stmt.QueryRowContext(ctx, login).Scan(&hash)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", false
 		}
 	}
+
+	if err := stmt.Close(); err != nil {
+		logrus.Warnf("attention error closing statment: %v", err)
+	}
 	return hash, true
+}
+
+func (o *Store) CreateUserOrderDB(ctx context.Context, order models.Orders) error {
+	timestamp := time.Now().Unix()
+
+	stmt, err := o.db.db.PrepareContext(ctx, createOrder)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, order.UserID, order.ID, order.Status, order.Accrual, timestamp)
+	if err != nil {
+
+	}
+
+	if err := stmt.Close(); err != nil {
+		logrus.Warnf("attention error closing statment: %v", err)
+	}
+
+	return nil
 }

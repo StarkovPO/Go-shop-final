@@ -6,7 +6,9 @@ import (
 	"errors"
 	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
+	"io"
 	"net/http"
+	"strconv"
 )
 
 var (
@@ -16,6 +18,7 @@ var (
 type ServiceInterface interface {
 	CreateUser(ctx context.Context, req models.Users) (string, error)
 	GenerateUserToken(ctx context.Context, req models.Users) (string, error)
+	CreateUserOrder(ctx context.Context, req models.Orders) error
 }
 
 func RegisterUser(s ServiceInterface) http.HandlerFunc {
@@ -84,9 +87,51 @@ func LoginUser(s ServiceInterface) http.HandlerFunc {
 	}
 }
 
-//func RegisterUser(s ServiceInterface) http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//
-//	}
-//
-//}
+func CreateOrder(s ServiceInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+
+		body, _ := io.ReadAll(r.Body)
+		UID := r.Header.Get("User-ID")
+		ID, err := strconv.Atoi(string(body)) // add validation for empty body
+
+		if err != nil {
+			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			return
+		}
+
+		req := models.Orders{UserID: UID, ID: ID}
+
+		err = s.CreateUserOrder(ctx, req)
+
+		if errors.As(err, &appErr) {
+			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
+				w.WriteHeader(http.StatusUnauthorized)
+				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, err = w.Write(appErrors.ErrInvalidOrderNumber.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrOrderAlreadyExist) {
+				w.WriteHeader(http.StatusConflict)
+				_, err = w.Write(appErrors.ErrOrderAlreadyExist.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrOrderAlreadyBelong) {
+				w.WriteHeader(http.StatusAccepted)
+				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	}
+}
