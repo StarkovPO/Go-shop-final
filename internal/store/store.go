@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -78,16 +79,30 @@ func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
 }
 
 func (o *Store) CreateUserOrderDB(ctx context.Context, order models.Orders) error {
+
+	var UID string
+
 	timestamp := time.Now().Unix()
 
 	stmt, err := o.db.db.PrepareContext(ctx, createOrder)
+	stmt2, err := o.db.db.PrepareContext(ctx, getUserFromOrders)
 	if err != nil {
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx, order.UserID, order.ID, order.Status, order.Accrual, timestamp)
 	if err != nil {
-
+		d := err.Error()
+		if d == "pq: duplicate key value violates unique constraint \"orders_id_key\"" {
+			err = stmt2.QueryRowContext(ctx, order.ID).Scan(&UID)
+			if UID != order.UserID {
+				return appErrors.ErrOrderAlreadyExist
+			} else if UID == order.UserID {
+				return appErrors.ErrOrderAlreadyBelong
+			} else {
+				return err
+			}
+		}
 	}
 
 	if err := stmt.Close(); err != nil {

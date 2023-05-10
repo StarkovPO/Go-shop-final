@@ -91,7 +91,7 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	if !IsOrderNumberValid(req.ID) {
 		return appErrors.ErrInvalidOrderNumber
 	}
-
+	/* it works only with external service */
 	res, err := getLoyaltySystem(ctx, req.ID, s.config.AccrualSystemAddressValue)
 
 	if err != nil {
@@ -100,6 +100,8 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	res.UserID = req.UserID
 
 	err = s.store.CreateUserOrderDB(ctx, res)
+
+	//err := s.store.CreateUserOrderDB(ctx, req)
 
 	return err
 }

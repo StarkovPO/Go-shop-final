@@ -95,6 +95,12 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 			return
 		}
 
+		if r.Header.Get("Authorization") == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			return
+		}
+
 		ctx := r.Context()
 
 		body, _ := io.ReadAll(r.Body)

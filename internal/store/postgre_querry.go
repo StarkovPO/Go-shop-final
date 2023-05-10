@@ -12,7 +12,7 @@ const (
 	createOrderTable = `CREATE TABLE IF NOT EXISTS "orders" (
         "primary_id" SERIAL PRIMARY KEY,
         "user_id" varchar(36),
-        "id" integer UNIQUE,
+        "id" BIGSERIAL UNIQUE,
         "status" varchar(255) NOT NULL,
         "accrual" integer,
         "uploaded_at" timestamp NOT NULL
@@ -54,4 +54,6 @@ const (
         INSERT INTO orders (user_id, id, status, accrual, uploaded_at)
         VALUES ($1, $2, $3, $4, to_timestamp($5))
     `
+
+	getUserFromOrders = `SELECT user_id FROM orders WHERE id = $1 LIMIT 1`
 )
