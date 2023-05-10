@@ -24,7 +24,7 @@ func initApp(c config.Config) error {
 
 	db := store.NewPostgres(store.MustPostgresConnection(c))
 	storeApp := store.NewStore(*db)
-	serviceApp := service.NewService(storeApp, c)
+	serviceApp := service.NewService(&storeApp, c)
 	router := setupAPI(serviceApp)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -70,6 +70,7 @@ func setupAPI(s service.Service) *mux.Router {
 	router.HandleFunc("/api/user/register", handler.RegisterUser(&s)).Methods(http.MethodPost)
 	router.HandleFunc("/api/user/login", handler.LoginUser(&s)).Methods(http.MethodPost)
 	router.HandleFunc("/api/user/orders", handler.CreateOrder(&s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/orders", handler.GetUserOrders(&s)).Methods(http.MethodGet)
 
 	return router
 

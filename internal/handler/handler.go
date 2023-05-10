@@ -19,6 +19,7 @@ type ServiceInterface interface {
 	CreateUser(ctx context.Context, req models.Users) (string, error)
 	GenerateUserToken(ctx context.Context, req models.Users) (string, error)
 	CreateUserOrder(ctx context.Context, req models.Orders) error
+	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
 }
 
 func RegisterUser(s ServiceInterface) http.HandlerFunc {
@@ -136,6 +137,60 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 			}
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	}
+}
+
+func GetUserOrders(s ServiceInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("Authorization") == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		UID := r.Header.Get("User-ID")
+
+		res, err := s.GetUserOrders(ctx, UID)
+
+		if errors.As(err, &appErr) {
+			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
+				w.WriteHeader(http.StatusUnauthorized)
+				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, err = w.Write(appErrors.ErrInvalidOrderNumber.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrOrderAlreadyExist) {
+				w.WriteHeader(http.StatusConflict)
+				_, err = w.Write(appErrors.ErrOrderAlreadyExist.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrOrderAlreadyBelong) {
+				w.WriteHeader(http.StatusAccepted)
+				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-type", "application/json")
+
+		b, err := json.Marshal(res)
+
+		if err != nil {
+			http.Error(w, "Server error", http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(b)
+		if err != nil {
 			return
 		}
 

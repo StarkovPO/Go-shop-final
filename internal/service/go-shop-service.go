@@ -5,7 +5,6 @@ import (
 	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
-	"github.com/StarkovPO/Go-shop-final/internal/store"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )
@@ -21,10 +20,11 @@ type StoreInterface interface {
 	CheckLogin(ctx context.Context, login string) bool
 	GetUserPass(ctx context.Context, login string) (string, bool)
 	CreateUserOrderDB(ctx context.Context, order models.Orders) error
+	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
 }
 
 type Service struct {
-	store  store.Store
+	store  StoreInterface
 	config config.Config
 }
 
@@ -33,7 +33,7 @@ type TokenClaims struct {
 	UserID string `json:"user_id"`
 }
 
-func NewService(s store.Store, c config.Config) Service {
+func NewService(s StoreInterface, c config.Config) Service {
 	return Service{
 		store:  s,
 		config: c,
@@ -104,4 +104,15 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	//err := s.store.CreateUserOrderDB(ctx, req)
 
 	return err
+}
+
+func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error) {
+
+	req, err := s.store.GetUserOrders(ctx, UID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }

@@ -60,6 +60,7 @@ func (o *Store) CheckLogin(ctx context.Context, login string) bool {
 }
 
 func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
+
 	var hash string
 
 	stmt, err := o.db.db.PrepareContext(ctx, getUserPass)
@@ -110,4 +111,17 @@ func (o *Store) CreateUserOrderDB(ctx context.Context, order models.Orders) erro
 	}
 
 	return nil
+}
+
+func (o *Store) GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error) {
+
+	var orders []models.Orders
+
+	err := o.db.db.SelectContext(ctx, &orders, getOrders, UID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }
