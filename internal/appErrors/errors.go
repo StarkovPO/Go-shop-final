@@ -14,6 +14,7 @@ var (
 	ErrInvalidOrderNumber = NewAppError(nil, "Invalid or empty order number", "Order number is not valid. Checked by Luhn")
 	ErrOrderAlreadyExist  = NewAppError(nil, "Order already belong to another user", "User tried to connect existed user's order")
 	ErrOrderAlreadyBelong = NewAppError(nil, "Order already belong to current user", "User tried to connect again his order")
+	ErrOrderNotFound      = NewAppError(nil, "User's order not found", "Nothing returned from DB")
 )
 
 type AppError struct {

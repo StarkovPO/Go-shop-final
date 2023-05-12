@@ -121,5 +121,9 @@ func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Order
 		return nil, err
 	}
 
-	return req, nil
+	if req != nil {
+		return req, nil
+	}
+
+	return req, appErrors.ErrOrderNotFound
 }

@@ -162,20 +162,12 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 				w.WriteHeader(http.StatusUnauthorized)
 				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
 				return
-			} else if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				_, err = w.Write(appErrors.ErrInvalidOrderNumber.Marshal())
-				return
-			} else if errors.Is(err, appErrors.ErrOrderAlreadyExist) {
-				w.WriteHeader(http.StatusConflict)
-				_, err = w.Write(appErrors.ErrOrderAlreadyExist.Marshal())
-				return
-			} else if errors.Is(err, appErrors.ErrOrderAlreadyBelong) {
-				w.WriteHeader(http.StatusAccepted)
-				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
+			} else if errors.Is(err, appErrors.ErrOrderNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				_, err = w.Write(appErrors.ErrOrderNotFound.Marshal())
 				return
 			}
-		} else {
+		} else if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

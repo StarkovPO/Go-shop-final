@@ -71,6 +71,7 @@ func setupAPI(s service.Service) *mux.Router {
 	router.HandleFunc("/api/user/login", handler.LoginUser(&s)).Methods(http.MethodPost)
 	router.HandleFunc("/api/user/orders", handler.CreateOrder(&s)).Methods(http.MethodPost)
 	router.HandleFunc("/api/user/orders", handler.GetUserOrders(&s)).Methods(http.MethodGet)
+	//router.HandleFunc("/api/user/orders", handler.GetUserBalance(&s)).Methods(http.MethodGet)
 
 	return router
 
