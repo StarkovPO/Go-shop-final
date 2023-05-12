@@ -21,7 +21,8 @@ const (
 	createBalanceTable = `CREATE TABLE IF NOT EXISTS "balance" (
         "primary_id" SERIAL PRIMARY KEY,
         "user_id" varchar(36),
-        "current" float
+        "current" float,
+    	"withdrawn" float
     )`
 
 	createWithdrawTable = `CREATE TABLE IF NOT EXISTS "withdrawn" (
@@ -57,7 +58,11 @@ const (
 
 	getUserFromOrders = `SELECT user_id FROM orders WHERE id = $1 LIMIT 1`
 
-	getOrders = `SELECT id, status, accrual, uploaded_at FROM orders WHERE user_id = $1`
+	getOrders = `SELECT id, status, accrual, uploaded_at FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC`
 
 	getUserID = `SELECT id FROM users WHERE login = $1`
+
+	updateUserBalance = `UPDATE balance SET current = ( SELECT current FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`
+
+	getUserBalance = `SELECT * FROM balance WHERE user_id = $1`
 )

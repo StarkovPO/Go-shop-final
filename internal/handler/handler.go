@@ -20,6 +20,7 @@ type ServiceInterface interface {
 	GenerateUserToken(ctx context.Context, req models.Users) (string, error)
 	CreateUserOrder(ctx context.Context, req models.Orders) error
 	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
+	GetUserBalance(ctx context.Context, UID string) (models.Balance, error)
 }
 
 func RegisterUser(s ServiceInterface) http.HandlerFunc {
@@ -189,9 +190,38 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 	}
 }
 
-//
-//func GetUserBalance(s ServiceInterface) http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//
-//	}
-//}
+func GetUserBalance(s ServiceInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("Authorization") == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+
+		UID := r.Header.Get("User-ID")
+
+		res, err := s.GetUserBalance(ctx, UID)
+
+		if err != nil {
+			http.Error(w, "Server error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-type", "application/json")
+
+		b, err := json.Marshal(res)
+
+		if err != nil {
+			http.Error(w, "Server error", http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(b)
+		if err != nil {
+			return
+		}
+	}
+}

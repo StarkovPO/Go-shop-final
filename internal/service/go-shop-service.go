@@ -23,6 +23,8 @@ type StoreInterface interface {
 	CreateUserOrderDB(ctx context.Context, order models.Orders) error
 	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
 	GetUserID(ctx context.Context, login string) (string, error)
+	IncreaseUserBalance(ctx context.Context, accrual int, UID string) error
+	GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error)
 }
 
 type Service struct {
@@ -108,6 +110,10 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 
 	err = s.store.CreateUserOrderDB(ctx, res)
 
+	if res.Accrual != 0 {
+		err = s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID)
+	}
+
 	//err := s.store.CreateUserOrderDB(ctx, req)
 
 	return err
@@ -126,4 +132,14 @@ func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Order
 	}
 
 	return req, appErrors.ErrOrderNotFound
+}
+
+func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balance, error) {
+	b, err := s.store.GetUserBalanceDB(ctx, UID)
+
+	if err != nil {
+		return models.Balance{}, err
+	}
+
+	return b, nil
 }

@@ -145,3 +145,27 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 	}
 	return UID, nil
 }
+
+func (o *Store) IncreaseUserBalance(ctx context.Context, accrual int, UID string) error {
+	stmt, err := o.db.db.PrepareContext(ctx, updateUserBalance)
+
+	_, err = stmt.ExecContext(ctx, UID, accrual)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error) {
+	var balance models.Balance
+
+	err := o.db.db.GetContext(ctx, &balance, getUserBalance, UID)
+
+	if err != nil {
+		return models.Balance{}, err
+	}
+
+	return balance, nil
+
+}
