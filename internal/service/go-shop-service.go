@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
@@ -21,6 +22,7 @@ type StoreInterface interface {
 	GetUserPass(ctx context.Context, login string) (string, bool)
 	CreateUserOrderDB(ctx context.Context, order models.Orders) error
 	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
+	GetUserID(ctx context.Context, login string) (string, error)
 }
 
 type Service struct {
@@ -73,12 +75,17 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 
 	isPassValid := comparePasswordHash(passwordHash, req.Password)
 	if isPassValid {
+		UID, err := s.store.GetUserID(ctx, req.Login)
+		if err != nil {
+			return "", errors.New("error while getting UID: %v")
+		}
+
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
 			jwt.StandardClaims{
 				ExpiresAt: time.Now().Add(tokenTTL).Unix(),
 				IssuedAt:  time.Now().Unix(),
 			},
-			req.Id,
+			UID,
 		})
 
 		return token.SignedString([]byte(signingKey))

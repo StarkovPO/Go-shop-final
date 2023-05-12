@@ -58,4 +58,6 @@ const (
 	getUserFromOrders = `SELECT user_id FROM orders WHERE id = $1 LIMIT 1`
 
 	getOrders = `SELECT id, status, accrual, uploaded_at FROM orders WHERE user_id = $1`
+
+	getUserID = `SELECT id FROM users WHERE login = $1`
 )

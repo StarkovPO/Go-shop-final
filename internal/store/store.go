@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
@@ -124,4 +125,23 @@ func (o *Store) GetUserOrders(ctx context.Context, UID string) ([]models.Orders,
 	}
 
 	return orders, nil
+}
+
+func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
+	var UID string
+
+	stmt, err := o.db.db.PrepareContext(ctx, getUserID)
+
+	err = stmt.QueryRowContext(ctx, login).Scan(&UID)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", errors.New("login not found. Impossible")
+		}
+	}
+
+	if err := stmt.Close(); err != nil {
+		logrus.Warnf("attention error closing statment: %v", err)
+	}
+	return UID, nil
 }

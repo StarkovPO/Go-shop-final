@@ -196,3 +196,10 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 
 	}
 }
+
+//
+//func GetUserBalance(s ServiceInterface) http.HandlerFunc {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//
+//	}
+//}
