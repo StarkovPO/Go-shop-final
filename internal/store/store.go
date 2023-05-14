@@ -146,7 +146,7 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 	return UID, nil
 }
 
-func (o *Store) IncreaseUserBalance(ctx context.Context, accrual int, UID string) error {
+func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error {
 	stmt, err := o.db.db.PrepareContext(ctx, updateUserBalance)
 
 	_, err = stmt.ExecContext(ctx, UID, accrual)
