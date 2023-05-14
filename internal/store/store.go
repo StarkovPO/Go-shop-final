@@ -24,11 +24,13 @@ func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 
 	stmt, err := o.db.db.PrepareContext(ctx, createUser)
 	if err != nil {
+		logrus.Errorf("unhandled error: %v", err)
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx, user.Id, user.Login, user.Password, timestamp)
 	if err != nil {
+		logrus.Errorf("unhandled error: %v", err)
 		return err
 	}
 
@@ -49,6 +51,7 @@ func (o *Store) CheckLogin(ctx context.Context, login string) bool {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			logrus.Info("No rows returned")
 			return false
 		}
 	}
@@ -70,6 +73,7 @@ func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			logrus.Info("No rows returned")
 			return "", false
 		}
 	}
@@ -85,12 +89,11 @@ func (o *Store) CreateUserOrderDB(ctx context.Context, order models.OrderFromSer
 	var UID string
 
 	timestamp := time.Now().Unix()
-	logrus.Printf("timestamp in createOrder")
 
 	stmt, err := o.db.db.PrepareContext(ctx, createOrder)
 	stmt2, err := o.db.db.PrepareContext(ctx, getUserFromOrders)
 	if err != nil {
-		logrus.Printf("error with stmt: %v", err)
+		logrus.Errorf("error with stmt: %v", err)
 		return err
 	}
 
@@ -127,6 +130,7 @@ func (o *Store) GetUserOrders(ctx context.Context, UID string) ([]models.Orders,
 	err := o.db.db.SelectContext(ctx, &orders, getOrders, UID)
 
 	if err != nil {
+		logrus.Errorf("unhandled error: %v", err)
 		return nil, err
 	}
 
@@ -142,8 +146,11 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			logrus.Errorf("impossible error: %v", err)
 			return "", errors.New("login not found. Impossible")
 		}
+		logrus.Errorf("unhandled error: %v", err)
+		return "", err
 	}
 
 	if err := stmt.Close(); err != nil {
@@ -154,7 +161,6 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 
 func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error {
 
-	logrus.Printf("increase user balance")
 	stmt, err := o.db.db.PrepareContext(ctx, createUserBalance)
 
 	_, err = stmt.ExecContext(ctx, UID, accrual, 0)
@@ -176,13 +182,12 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 		return err
 	}
 
-	logrus.Printf("balance incresed succesfull")
-	return err
+	return nil
 }
 
 func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error) {
 	var balance models.Balance
-	logrus.Printf("get user balance DB")
+
 	err := o.db.db.GetContext(ctx, &balance, getUserBalance, UID)
 
 	if err != nil {
@@ -195,7 +200,6 @@ func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balanc
 		logrus.Errorf("unhandled error: %v", err)
 		return models.Balance{}, err
 	}
-	logrus.Printf("success user balance DB")
 	return balance, nil
 
 }
