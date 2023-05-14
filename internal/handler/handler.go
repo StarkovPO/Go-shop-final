@@ -21,6 +21,7 @@ type ServiceInterface interface {
 	CreateUserOrder(ctx context.Context, req models.Orders) error
 	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
 	GetUserBalance(ctx context.Context, UID string) (models.Balance, error)
+	CreateUserWithdraw(ctx context.Context, req models.Withdrawn) error
 }
 
 func RegisterUser(s ServiceInterface) http.HandlerFunc {
@@ -220,6 +221,65 @@ func GetUserBalance(s ServiceInterface) http.HandlerFunc {
 
 		_, err = w.Write(b)
 		if err != nil {
+			return
+		}
+	}
+}
+
+func CreateUserWithdraw(s ServiceInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("Authorization") == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "application/json" {
+			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			return
+		}
+
+		var req models.Withdrawn
+
+		ctx := r.Context()
+
+		UID := r.Header.Get("User-ID")
+
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			return
+		}
+
+		req.UserID = UID
+		err = s.CreateUserWithdraw(ctx, req)
+
+		if errors.As(err, &appErr) {
+			if errors.Is(err, appErrors.ErrNotEnoughPoints) {
+				w.WriteHeader(http.StatusPaymentRequired)
+				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, err = w.Write(appErrors.ErrOrderNotFound.Marshal())
+				return
+			}
+		} else if err != nil {
+			logrus.Errorf("ops something went wrong: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	}
+}
+
+func GetUserWithdraw(s ServiceInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("Authorization") == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
 			return
 		}
 	}

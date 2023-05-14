@@ -15,6 +15,7 @@ var (
 	ErrOrderAlreadyExist  = NewAppError(nil, "Order already belong to another user", "User tried to connect existed user's order")
 	ErrOrderAlreadyBelong = NewAppError(nil, "Order already belong to current user", "User tried to connect again his order")
 	ErrOrderNotFound      = NewAppError(nil, "User's order not found", "Nothing returned from DB")
+	ErrNotEnoughPoints    = NewAppError(nil, "Not enough to write off points", "User send tried to write off more that have")
 )
 
 type AppError struct {

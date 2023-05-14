@@ -169,7 +169,7 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 		d := err.Error()
 		if d != "pq: duplicate key value violates unique constraint \"user_id_key\"" {
 			logrus.Infof("handled error: %v", err)
-			stmt, err = o.db.db.PrepareContext(ctx, updateUserBalance)
+			stmt, err = o.db.db.PrepareContext(ctx, increaseUserBalance)
 
 			_, err = stmt.ExecContext(ctx, UID, accrual)
 
@@ -183,6 +183,25 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 	}
 
 	return nil
+}
+
+func (o *Store) DecreaseUserBalance(ctx context.Context, withdrawn float64, UID string) error {
+
+	stmt, err := o.db.db.PrepareContext(ctx, decreaseUserBalance)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, UID, withdrawn)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
+	}
+
+	return err
 }
 
 func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error) {
@@ -202,4 +221,50 @@ func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balanc
 	}
 	return balance, nil
 
+}
+
+func (o *Store) IncreaseUserWithdrawn(ctx context.Context, withdrawn float64, UID string) error {
+
+	stmt, err := o.db.db.PrepareContext(ctx, increaseUserWithdrawn)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, UID, withdrawn)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
+	}
+
+	return err
+}
+
+func (o *Store) CreateWithdraw(ctx context.Context, req models.Withdrawn) error {
+
+	timestamp := time.Now().Unix()
+	stmt, err := o.db.db.PrepareContext(ctx, createUserWithdrawn)
+
+	if err != nil {
+		logrus.Errorf("unexpected error: %v", err)
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, req.OrderID, req.Withdrawn, req.UserID, timestamp)
+
+	if err != nil {
+		logrus.Errorf("unexpected error: %v", err)
+		return err
+	}
+
+	err = o.DecreaseUserBalance(ctx, req.Withdrawn, req.UserID)
+
+	if err != nil {
+		logrus.Errorf("unexpected error: %v", err)
+		return err
+	}
+
+	return err
 }

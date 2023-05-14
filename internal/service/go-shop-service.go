@@ -27,6 +27,7 @@ type StoreInterface interface {
 	GetUserID(ctx context.Context, login string) (string, error)
 	IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error
 	GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error)
+	CreateWithdraw(ctx context.Context, req models.Withdrawn) error
 }
 
 type Service struct {
@@ -154,4 +155,27 @@ func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balanc
 	}
 
 	return b, nil
+}
+
+func (s *Service) CreateUserWithdraw(ctx context.Context, req models.Withdrawn) error {
+
+	intId, _ := strconv.Atoi(req.OrderID)
+	if !IsOrderNumberValid(intId) {
+		return appErrors.ErrInvalidOrderNumber
+	}
+
+	b, err := s.store.GetUserBalanceDB(ctx, req.UserID)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error on service level: %v", err)
+		return err
+	}
+
+	if b.Current < req.Withdrawn {
+		return appErrors.ErrNotEnoughPoints
+	}
+
+	err = s.store.CreateWithdraw(ctx, req)
+
+	return nil
 }

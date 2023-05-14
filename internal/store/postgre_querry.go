@@ -63,9 +63,15 @@ const (
 
 	getUserID = `SELECT id FROM users WHERE login = $1`
 
-	updateUserBalance = `UPDATE balance SET current = ( SELECT current FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`
+	increaseUserBalance = `UPDATE balance SET current = ( SELECT current FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`
+
+	decreaseUserBalance = `UPDATE balance SET current = ( SELECT current FROM balance WHERE user_id = $1) - $2 WHERE user_id = $1`
 
 	getUserBalance = `SELECT * FROM balance WHERE user_id = $1`
 
 	createUserBalance = `INSERT INTO balance (user_id, current, withdrawn) VALUES ($1, $2, $3)`
+
+	createUserWithdrawn = `INSERT INTO withdrawn (order_id, withdrawn, user_id, processed_at) VALUES (
+                                                                           $1, $2, $3, to_timestamp($4))`
+	increaseUserWithdrawn = `UPDATE balance SET withdrawn = ( SELECT withdrawn FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`
 )
