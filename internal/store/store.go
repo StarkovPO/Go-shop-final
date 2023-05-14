@@ -170,13 +170,14 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 
 func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error) {
 	var balance models.Balance
-
+	logrus.Printf("get user balance DB")
 	err := o.db.db.GetContext(ctx, &balance, getUserBalance, UID)
 
 	if err != nil {
+		logrus.Errorf("unhandled error: %v", err)
 		return models.Balance{}, err
 	}
-
+	logrus.Printf("success user balance DB")
 	return balance, nil
 
 }

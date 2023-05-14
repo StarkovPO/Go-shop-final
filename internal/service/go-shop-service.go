@@ -150,11 +150,14 @@ func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Order
 }
 
 func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balance, error) {
+	logrus.Printf("getUserBalance")
 	b, err := s.store.GetUserBalanceDB(ctx, UID)
 
 	if err != nil {
+		logrus.Errorf("ops unhandled error on service level: %v", err)
 		return models.Balance{}, err
 	}
 
+	logrus.Printf("success user balance")
 	return b, nil
 }

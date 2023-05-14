@@ -203,6 +203,7 @@ func GetUserBalance(s ServiceInterface) http.HandlerFunc {
 		res, err := s.GetUserBalance(ctx, UID)
 
 		if err != nil {
+			logrus.Errorf("ops something went wrong: %v", err)
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
@@ -212,6 +213,7 @@ func GetUserBalance(s ServiceInterface) http.HandlerFunc {
 		b, err := json.Marshal(res)
 
 		if err != nil {
+			logrus.Errorf("ops something went wrong: %v", err)
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
