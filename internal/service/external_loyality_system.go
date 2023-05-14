@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 )
 
@@ -29,9 +30,11 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 		return models.Orders{}, err
 	}
 
-	if resp.StatusCode != (http.StatusOK | http.StatusNoContent) {
+	// {"level":"error","msg":"External service responce with code: 200 and body: \u0026{0xc0000a85c0 {0 0} false \u003cnil\u003e 0x748800 0x748900}","time":"2023-05-14T07:11:51Z"}
+	if resp.StatusCode != http.StatusOK|http.StatusNoContent {
+		b, _ := io.ReadAll(resp.Body)
 		logrus.Printf("ops something went wrong. Http code: %v", resp.StatusCode)
-		logrus.Errorf("External service responce with code: %v and body: %v", resp.StatusCode, resp.Body)
+		logrus.Errorf("External service responce with code: %v and body: %v", resp.StatusCode, string(b))
 		return models.Orders{}, err
 	}
 
