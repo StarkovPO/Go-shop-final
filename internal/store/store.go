@@ -164,6 +164,7 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 		return err
 	}
 
+	logrus.Printf("balance incresed succesfull")
 	return nil
 }
 

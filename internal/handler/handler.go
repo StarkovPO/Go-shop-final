@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 )
@@ -118,11 +119,7 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 		err := s.CreateUserOrder(ctx, req)
 
 		if errors.As(err, &appErr) {
-			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
-				w.WriteHeader(http.StatusUnauthorized)
-				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
-				return
-			} else if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
+			if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
 				w.WriteHeader(http.StatusUnprocessableEntity)
 				_, err = w.Write(appErrors.ErrInvalidOrderNumber.Marshal())
 				return
@@ -131,15 +128,16 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 				_, err = w.Write(appErrors.ErrOrderAlreadyExist.Marshal())
 				return
 			} else if errors.Is(err, appErrors.ErrOrderAlreadyBelong) {
-				w.WriteHeader(http.StatusAccepted)
+				w.WriteHeader(http.StatusOK)
 				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
 				return
+			} else {
+				logrus.Errorf("ops unhandled error: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
 		}
-
+		w.WriteHeader(http.StatusAccepted)
 	}
 }
 

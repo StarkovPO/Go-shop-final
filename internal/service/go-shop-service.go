@@ -114,13 +114,22 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	logrus.Printf("calling createUserOrderDB")
 	err = s.store.CreateUserOrderDB(ctx, res)
 
+	if err != nil {
+		logrus.Printf("ops something went wrong: %v", err)
+		return err
+	}
+
 	if res.Accrual != 0 {
 		logrus.Printf("accural: %v", res.Accrual)
 		err = s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID)
 	}
 
+	if err != nil {
+		logrus.Printf("ops something went wrong: %v", err)
+		return err
+	}
 	//err := s.store.CreateUserOrderDB(ctx, req)
-
+	logrus.Printf("Create user order return: %v", err)
 	return err
 }
 
