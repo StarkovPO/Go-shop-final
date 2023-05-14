@@ -33,10 +33,10 @@ const (
         "processed_at" timestamp NOT NULL
     )`
 
-	createOrderForeignKey     = `ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
-	createBalanceForeignKey   = `ALTER TABLE "balance" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
-	createWithdrawForeignKey  = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
-	createWithdrawForeignKey2 = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("order_id") REFERENCES "orders" ("id");`
+	createOrderForeignKey    = `ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
+	createBalanceForeignKey  = `ALTER TABLE "balance" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
+	createWithdrawForeignKey = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
+	//createWithdrawForeignKey2 = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("order_id") REFERENCES "orders" ("id");`
 
 	createLoginIndex         = `CREATE UNIQUE INDEX IF NOT EXISTS users_login_uindex ON public.users (login)`
 	createOrderIDIndex       = `CREATE UNIQUE INDEX IF NOT EXISTS orders_id_uindex ON public.orders (id)`
@@ -74,4 +74,6 @@ const (
 	createUserWithdrawn = `INSERT INTO withdrawn (order_id, withdrawn, user_id, processed_at) VALUES (
                                                                            $1, $2, $3, to_timestamp($4))`
 	increaseUserWithdrawn = `UPDATE balance SET withdrawn = ( SELECT withdrawn FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`
+
+	getUserWithdrawn = `SELECT order_id, withdrawn, processed_at FROM withdrawn WHERE user_id = $1 ORDER BY processed_at ASC`
 )

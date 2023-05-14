@@ -268,3 +268,16 @@ func (o *Store) CreateWithdraw(ctx context.Context, req models.Withdrawn) error 
 
 	return err
 }
+
+func (o *Store) GetUserWithdrawnDB(ctx context.Context, UID string) ([]models.Withdrawn, error) {
+	var withdrawn []models.Withdrawn
+
+	err := o.db.db.SelectContext(ctx, &withdrawn, getUserWithdrawn, UID)
+
+	if err != nil {
+		logrus.Errorf("unhandled error: %v", err)
+		return nil, err
+	}
+
+	return withdrawn, nil
+}

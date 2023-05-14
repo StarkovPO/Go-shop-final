@@ -28,6 +28,7 @@ type StoreInterface interface {
 	IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error
 	GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error)
 	CreateWithdraw(ctx context.Context, req models.Withdrawn) error
+	GetUserWithdrawnDB(ctx context.Context, UID string) ([]models.Withdrawn, error)
 }
 
 type Service struct {
@@ -178,4 +179,18 @@ func (s *Service) CreateUserWithdraw(ctx context.Context, req models.Withdrawn) 
 	err = s.store.CreateWithdraw(ctx, req)
 
 	return nil
+}
+
+func (s *Service) GetUserWithdrawn(ctx context.Context, UID string) ([]models.Withdrawn, error) {
+	res, err := s.store.GetUserWithdrawnDB(ctx, UID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if res != nil {
+		return res, err
+	}
+
+	return res, appErrors.ErrWithdrawnNotFound
 }

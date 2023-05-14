@@ -22,6 +22,7 @@ type ServiceInterface interface {
 	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
 	GetUserBalance(ctx context.Context, UID string) (models.Balance, error)
 	CreateUserWithdraw(ctx context.Context, req models.Withdrawn) error
+	GetUserWithdrawn(ctx context.Context, UID string) ([]models.Withdrawn, error)
 }
 
 func RegisterUser(s ServiceInterface) http.HandlerFunc {
@@ -280,6 +281,41 @@ func GetUserWithdraw(s ServiceInterface) http.HandlerFunc {
 		if r.Header.Get("Authorization") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+
+		UID := r.Header.Get("User-ID")
+
+		res, err := s.GetUserWithdrawn(ctx, UID)
+
+		if errors.As(err, &appErr) {
+			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
+				w.WriteHeader(http.StatusUnauthorized)
+				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
+				return
+			} else if errors.Is(err, appErrors.ErrOrderNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				_, err = w.Write(appErrors.ErrOrderNotFound.Marshal())
+				return
+			}
+		} else if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-type", "application/json")
+
+		b, err := json.Marshal(res)
+
+		if err != nil {
+			http.Error(w, "Server error", http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(b)
+		if err != nil {
 			return
 		}
 	}
