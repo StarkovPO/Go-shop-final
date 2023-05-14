@@ -73,7 +73,7 @@ func setupAPI(s service.Service) *mux.Router {
 	router.HandleFunc("/api/user/orders", handler.GetUserOrders(&s)).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/balance", handler.GetUserBalance(&s)).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/balance/withdraw", handler.CreateUserWithdraw(&s)).Methods(http.MethodPost)
-	router.HandleFunc("/api/user/balance/withdraw", handler.GetUserWithdraw(&s)).Methods(http.MethodGet)
+	router.HandleFunc("/api/user/withdrawals", handler.GetUserWithdraw(&s)).Methods(http.MethodGet)
 
 	return router
 
