@@ -112,25 +112,21 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	}
 	res.UserID = req.UserID
 	res.ID = req.ID
-	logrus.Printf("calling createUserOrderDB")
 	err = s.store.CreateUserOrderDB(ctx, res)
 
 	if err != nil {
-		logrus.Printf("ops something went wrong: %v", err)
+		logrus.Errorf("ops something went wrong: %v", err)
 		return err
 	}
 
-	if res.Accrual != 0 {
-		logrus.Printf("accural: %v", res.Accrual)
-		err = s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID)
-	}
+	logrus.Printf("accural: %v", res.Accrual)
+	err = s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID)
 
 	if err != nil {
-		logrus.Printf("ops something went wrong: %v", err)
+		logrus.Errorf("ops something went wrong: %v", err)
 		return err
 	}
 	//err := s.store.CreateUserOrderDB(ctx, req)
-	logrus.Printf("Create user order return: %v", err)
 	return err
 }
 
@@ -150,7 +146,6 @@ func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Order
 }
 
 func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balance, error) {
-	logrus.Printf("getUserBalance")
 	b, err := s.store.GetUserBalanceDB(ctx, UID)
 
 	if err != nil {
@@ -158,6 +153,5 @@ func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balanc
 		return models.Balance{}, err
 	}
 
-	logrus.Printf("success user balance")
 	return b, nil
 }

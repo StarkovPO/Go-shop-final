@@ -84,5 +84,9 @@ func MakeDB(db sqlx.DB) error {
 		return fmt.Errorf("error while run migrations %v", err)
 	}
 
+	if _, err := db.Exec(createUserIDIndexBalance); err != nil {
+		return fmt.Errorf("error while run migrations %v", err)
+	}
+
 	return nil
 }

@@ -22,7 +22,7 @@ const (
         "primary_id" SERIAL PRIMARY KEY,
         "user_id" varchar(36),
         "current" float,
-    	"withdrawn" float
+    	"withdrawn" float DEFAULT 0.0
     )`
 
 	createWithdrawTable = `CREATE TABLE IF NOT EXISTS "withdrawn" (
@@ -38,8 +38,9 @@ const (
 	createWithdrawForeignKey  = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");`
 	createWithdrawForeignKey2 = `ALTER TABLE "withdrawn" ADD FOREIGN KEY ("order_id") REFERENCES "orders" ("id");`
 
-	createLoginIndex   = `CREATE UNIQUE INDEX IF NOT EXISTS users_login_uindex ON public.users (login)`
-	createOrderIDIndex = `CREATE UNIQUE INDEX IF NOT EXISTS orders_id_uindex ON public.orders (id)`
+	createLoginIndex         = `CREATE UNIQUE INDEX IF NOT EXISTS users_login_uindex ON public.users (login)`
+	createOrderIDIndex       = `CREATE UNIQUE INDEX IF NOT EXISTS orders_id_uindex ON public.orders (id)`
+	createUserIDIndexBalance = `CREATE UNIQUE INDEX IF NOT EXISTS user_id_uindex ON public.balance (user_id)`
 
 	createUser = `
         INSERT INTO users (id, login, password_hash, created_at)
@@ -65,4 +66,6 @@ const (
 	updateUserBalance = `UPDATE balance SET current = ( SELECT current FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`
 
 	getUserBalance = `SELECT * FROM balance WHERE user_id = $1`
+
+	createUserBalance = `INSERT INTO balance (user_id, current, withdrawn) VALUES ($1, $2, $3)`
 )

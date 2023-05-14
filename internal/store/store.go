@@ -155,17 +155,27 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error {
 
 	logrus.Printf("increase user balance")
-	stmt, err := o.db.db.PrepareContext(ctx, updateUserBalance)
+	stmt, err := o.db.db.PrepareContext(ctx, createUserBalance)
 
 	_, err = stmt.ExecContext(ctx, UID, accrual)
 
 	if err != nil {
-		logrus.Errorf("ops unhandled error: %v", err)
-		return err
+		d := err.Error()
+		if d != "pq: duplicate key value violates unique constraint \"user_id_key\"" {
+			logrus.Infof("handled error: %v", err)
+			stmt, err = o.db.db.PrepareContext(ctx, updateUserBalance)
+
+			_, err = stmt.ExecContext(ctx, UID, accrual)
+
+			if err != nil {
+				logrus.Errorf("ops unhandled error: %v", err)
+				return err
+			}
+		}
 	}
 
 	logrus.Printf("balance incresed succesfull")
-	return nil
+	return err
 }
 
 func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error) {
@@ -174,6 +184,12 @@ func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balanc
 	err := o.db.db.GetContext(ctx, &balance, getUserBalance, UID)
 
 	if err != nil {
+
+		if err.Error() == "sql: no rows in result set" {
+			logrus.Infof("handled error: %v", err)
+			return models.Balance{Current: 0, Withdrawn: 0}, nil
+		}
+
 		logrus.Errorf("unhandled error: %v", err)
 		return models.Balance{}, err
 	}
