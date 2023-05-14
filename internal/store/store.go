@@ -80,7 +80,7 @@ func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
 	return hash, true
 }
 
-func (o *Store) CreateUserOrderDB(ctx context.Context, order models.Orders) error {
+func (o *Store) CreateUserOrderDB(ctx context.Context, order models.OrderFromService) error {
 
 	var UID string
 

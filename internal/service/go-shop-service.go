@@ -21,7 +21,7 @@ type StoreInterface interface {
 	CreateUserDB(ctx context.Context, user models.Users) error
 	CheckLogin(ctx context.Context, login string) bool
 	GetUserPass(ctx context.Context, login string) (string, bool)
-	CreateUserOrderDB(ctx context.Context, order models.Orders) error
+	CreateUserOrderDB(ctx context.Context, order models.OrderFromService) error
 	GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error)
 	GetUserID(ctx context.Context, login string) (string, error)
 	IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error
