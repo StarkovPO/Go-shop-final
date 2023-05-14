@@ -12,9 +12,9 @@ const (
 	createOrderTable = `CREATE TABLE IF NOT EXISTS "orders" (
         "primary_id" SERIAL PRIMARY KEY,
         "user_id" varchar(36),
-        "id" BIGSERIAL UNIQUE,
+        "id" varchar(36) UNIQUE,
         "status" varchar(255) NOT NULL,
-        "accrual" integer,
+        "accrual" float,
         "uploaded_at" timestamp NOT NULL
     )`
 
@@ -27,7 +27,7 @@ const (
 
 	createWithdrawTable = `CREATE TABLE IF NOT EXISTS "withdrawn" (
         "primary_id" SERIAL PRIMARY KEY,
-        "order_id" integer,
+        "order_id" varchar(36),
         "withdrawn" float,
         "user_id" varchar(36),
         "processed_at" timestamp NOT NULL

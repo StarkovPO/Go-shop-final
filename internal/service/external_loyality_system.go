@@ -17,6 +17,7 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 	client := &http.Client{}
 
 	url := fmt.Sprintf("%s/api/orders/%v", baseurl, ID)
+	logrus.Printf("request to the service: %v", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 
 	logrus.Printf("Ask getLoyaltySystem")
@@ -50,8 +51,9 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&order)
 	if err != nil {
+		b, _ := io.ReadAll(resp.Body)
 		logrus.Printf("ops something went wrong: %v", err)
-		logrus.Errorf("error while unmarshaling the request from service: %v and body: ", err)
+		logrus.Errorf("error while unmarshaling the request from service: %v and body: %v", err, string(b))
 		return models.OrderFromService{}, err
 	}
 	return order, nil

@@ -8,6 +8,7 @@ import (
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
+	"strconv"
 	"time"
 )
 
@@ -98,11 +99,12 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 
 func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error {
 
-	if !IsOrderNumberValid(req.ID) {
+	intId, _ := strconv.Atoi(req.ID)
+	if !IsOrderNumberValid(intId) {
 		return appErrors.ErrInvalidOrderNumber
 	}
 	/* it works only with external service */
-	res, err := getLoyaltySystem(ctx, req.ID, s.config.AccrualSystemAddressValue)
+	res, err := getLoyaltySystem(ctx, intId, s.config.AccrualSystemAddressValue)
 
 	if err != nil {
 		logrus.Printf("ops something went wrong: %v", err)

@@ -8,7 +8,6 @@ import (
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"io"
 	"net/http"
-	"strconv"
 )
 
 var (
@@ -107,16 +106,16 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 
 		body, _ := io.ReadAll(r.Body)
 		UID := r.Header.Get("User-ID")
-		ID, err := strconv.Atoi(string(body)) // add validation for empty body
+		ID := string(body)
 
-		if err != nil {
+		if ID == "" {
 			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
 		req := models.Orders{UserID: UID, ID: ID}
 
-		err = s.CreateUserOrder(ctx, req)
+		err := s.CreateUserOrder(ctx, req)
 
 		if errors.As(err, &appErr) {
 			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
