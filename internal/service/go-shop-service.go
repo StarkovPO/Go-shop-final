@@ -7,6 +7,7 @@ import (
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -104,6 +105,7 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	res, err := getLoyaltySystem(ctx, req.ID, s.config.AccrualSystemAddressValue)
 
 	if err != nil {
+		logrus.Printf("ops something went wrong: %v", err)
 		return err
 	}
 	res.UserID = req.UserID
