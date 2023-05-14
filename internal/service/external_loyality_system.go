@@ -56,5 +56,7 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 		logrus.Errorf("error while unmarshaling the request from service: %v and body: %v", err, string(b))
 		return models.OrderFromService{}, err
 	}
+
+	logrus.Printf("response succesfull unmarshaled.ID: %v, status: %v, accural: %v", order.ID, order.Status, order.Accrual)
 	return order, nil
 }

@@ -111,10 +111,11 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 		return err
 	}
 	res.UserID = req.UserID
-
+	logrus.Printf("calling createUserOrderDB")
 	err = s.store.CreateUserOrderDB(ctx, res)
 
 	if res.Accrual != 0 {
+		logrus.Printf("accural: %v", res.Accrual)
 		err = s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID)
 	}
 
