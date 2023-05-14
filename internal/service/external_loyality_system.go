@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -38,7 +37,7 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 		b, _ := io.ReadAll(resp.Body)
 		logrus.Errorf("External service responce with code: 204 and body: %v", string(b))
 		logrus.Printf("ops order doesn't registered in system")
-		return models.OrderFromService{}, appErrors.ErrOrderAlreadyBelong
+		return models.OrderFromService{}, nil
 	}
 
 	if resp.StatusCode != http.StatusOK {

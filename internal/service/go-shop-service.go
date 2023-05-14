@@ -111,6 +111,7 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 		return err
 	}
 	res.UserID = req.UserID
+	res.ID = req.ID
 	logrus.Printf("calling createUserOrderDB")
 	err = s.store.CreateUserOrderDB(ctx, res)
 
