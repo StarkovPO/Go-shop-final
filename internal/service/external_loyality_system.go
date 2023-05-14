@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 )
 
@@ -30,12 +33,19 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 	}
 
 	// {"level":"error","msg":"External service responce with code: 200 and body: {\"order\":\"40534687\",\"status\":\"PROCESSED\",\"accrual\":729.98}\n","time":"2023-05-14T07:20:11Z"}
-	//if resp.StatusCode != http.StatusOK && http.StatusNoContent {
-	//	b, _ := io.ReadAll(resp.Body)
-	//	logrus.Printf("ops something went wrong. Http code: %v", resp.StatusCode)
-	//	logrus.Errorf("External service responce with code: %v and body: %v", resp.StatusCode, string(b))
-	//	return models.Orders{}, err
-	//}
+	if resp.StatusCode == http.StatusNoContent {
+		b, _ := io.ReadAll(resp.Body)
+		logrus.Errorf("External service responce with code: 204 and body: %v", string(b))
+		logrus.Printf("ops order doesn't registered in system")
+		return models.OrderFromService{}, appErrors.ErrOrderAlreadyBelong
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		logrus.Printf("ops something went wrong. Http code: %v", resp.StatusCode)
+		logrus.Errorf("External service responce with code: %v and body: %v", resp.StatusCode, string(b))
+		return models.OrderFromService{}, errors.New("external service response with bad status code")
+	}
 
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&order)
