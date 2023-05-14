@@ -157,7 +157,7 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 	logrus.Printf("increase user balance")
 	stmt, err := o.db.db.PrepareContext(ctx, createUserBalance)
 
-	_, err = stmt.ExecContext(ctx, UID, accrual)
+	_, err = stmt.ExecContext(ctx, UID, accrual, 0)
 
 	if err != nil {
 		d := err.Error()
@@ -172,6 +172,8 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 				return err
 			}
 		}
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
 	}
 
 	logrus.Printf("balance incresed succesfull")
