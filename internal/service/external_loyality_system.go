@@ -29,7 +29,7 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 		return models.Orders{}, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != (http.StatusOK | http.StatusNoContent) {
 		logrus.Printf("ops something went wrong. Http code: %v", resp.StatusCode)
 		logrus.Errorf("External service responce with code: %v and body: %v", resp.StatusCode, resp.Body)
 		return models.Orders{}, err
