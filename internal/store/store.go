@@ -99,7 +99,6 @@ func (o *Store) CreateUserOrderDB(ctx context.Context, order models.OrderFromSer
 
 	_, err = stmt.ExecContext(ctx, order.UserID, order.ID, order.Status, order.Accrual, timestamp)
 	if err != nil {
-		logrus.Printf("error with execute querry: %v", err)
 		d := err.Error()
 		if d == "pq: duplicate key value violates unique constraint \"orders_id_key\"" {
 			err = stmt2.QueryRowContext(ctx, order.ID).Scan(&UID)

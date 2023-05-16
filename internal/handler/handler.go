@@ -169,7 +169,7 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-type", "application/json")
-
+		logrus.Infof("User orders: %v", res)
 		b, err := json.Marshal(res)
 
 		if err != nil {
@@ -215,8 +215,6 @@ func GetUserBalance(s ServiceInterface) http.HandlerFunc {
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
-		logrus.Infof("User balance: %v", res.Current)
-		logrus.Infof("User balance: %v", res.Withdrawn)
 
 		_, err = w.Write(b)
 		if err != nil {

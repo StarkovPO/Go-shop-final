@@ -109,7 +109,6 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	res, err := getLoyaltySystem(ctx, intId, s.config.AccrualSystemAddressValue)
 
 	if err != nil {
-		logrus.Printf("ops something went wrong: %v", err)
 		return err
 	}
 	res.UserID = req.UserID
@@ -117,18 +116,16 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	err = s.store.CreateUserOrderDB(ctx, res)
 
 	if err != nil {
-		logrus.Errorf("ops something went wrong: %v", err)
 		return err
 	}
 
-	logrus.Printf("accural: %v", res.Accrual)
 	err = s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID)
 
 	if err != nil {
-		logrus.Errorf("ops something went wrong: %v", err)
+
 		return err
 	}
-	//err := s.store.CreateUserOrderDB(ctx, req)
+
 	return err
 }
 
