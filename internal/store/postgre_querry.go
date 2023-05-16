@@ -61,6 +61,8 @@ const (
 
 	getOrders = `SELECT id, status, accrual, uploaded_at FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC`
 
+	updateOrderStatus = `UPDATE orders SET status = $1 WHERE id = $2`
+
 	getUserID = `SELECT id FROM users WHERE login = $1`
 
 	increaseUserBalance = `UPDATE balance SET current = ( SELECT current FROM balance WHERE user_id = $1) + $2 WHERE user_id = $1`

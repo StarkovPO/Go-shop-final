@@ -282,3 +282,22 @@ func (o *Store) GetUserWithdrawnDB(ctx context.Context, UID string) ([]models.Wi
 
 	return withdrawn, nil
 }
+
+func (o *Store) UpdateOrderStatus(ctx context.Context, status string, UID string) error {
+
+	stmt, err := o.db.db.PrepareContext(ctx, updateOrderStatus)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, status, UID)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error: %v", err)
+		return err
+	}
+
+	return err
+}

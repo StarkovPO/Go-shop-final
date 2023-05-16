@@ -8,6 +8,7 @@ import (
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 	"strconv"
 	"time"
 )
@@ -29,6 +30,7 @@ type StoreInterface interface {
 	GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error)
 	CreateWithdraw(ctx context.Context, req models.Withdrawn) error
 	GetUserWithdrawnDB(ctx context.Context, UID string) ([]models.Withdrawn, error)
+	UpdateOrderStatus(ctx context.Context, status string, UID string) error
 }
 
 type Service struct {
@@ -111,6 +113,18 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	if err != nil {
 		return err
 	}
+
+	if res.Status == "" || res.Status == "REGISTERED" || res.Status == "PROCESSING" {
+		statusChan := make(chan int)
+		orderID, err := strconv.Atoi(res.ID)
+		if err != nil {
+			return err
+		}
+		statusChan <- orderID
+
+		go s.updater(ctx, statusChan, s.config.AccrualSystemAddressValue)
+	}
+
 	res.UserID = req.UserID
 	res.ID = req.ID
 	err = s.store.CreateUserOrderDB(ctx, res)
@@ -126,7 +140,47 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 		return err
 	}
 
-	return err
+	return nil
+}
+
+func (s *Service) updater(ctx context.Context, orderIDChan chan int, baseurl string) {
+
+	done := make(chan bool)
+	g, _ := errgroup.WithContext(ctx)
+	logrus.Info("updater start")
+	for id := range orderIDChan {
+		id := id
+		g.Go(func() error {
+			time.Sleep(5 * time.Second)
+			logrus.Info("gorutine sending request")
+			res, err := getLoyaltySystem(ctx, id, baseurl)
+			if err != nil {
+				logrus.Errorf("fatal fetching new order status: %v", err)
+				return err
+			}
+			if res.Status == "INVALID" || res.Status == "PROCESSED" {
+				logrus.Info("gorutine starting update status")
+				err = s.store.UpdateOrderStatus(ctx, res.Status, res.ID)
+				if err != nil {
+					logrus.Errorf("fatal updating Order status: %v", err)
+					return err
+				}
+				logrus.Info("gorutine updated order status")
+			} else {
+				logrus.Info("gorutine got not final status")
+				orderIDChan <- id
+			}
+			done <- true
+			return nil
+		})
+	}
+
+	go func() {
+		if err := g.Wait(); err != nil {
+			logrus.Errorf("unexpected error: %v", err)
+		}
+		done <- true
+	}()
 }
 
 func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error) {
