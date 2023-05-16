@@ -266,6 +266,8 @@ func (o *Store) CreateWithdraw(ctx context.Context, req models.Withdrawn) error 
 		return err
 	}
 
+	err = o.IncreaseUserWithdrawn(ctx, req.Withdrawn, req.UserID)
+
 	return err
 }
 

@@ -158,11 +158,7 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 		res, err := s.GetUserOrders(ctx, UID)
 
 		if errors.As(err, &appErr) {
-			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
-				w.WriteHeader(http.StatusUnauthorized)
-				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
-				return
-			} else if errors.Is(err, appErrors.ErrOrderNotFound) {
+			if errors.Is(err, appErrors.ErrOrderNotFound) {
 				w.WriteHeader(http.StatusNoContent)
 				_, err = w.Write(appErrors.ErrOrderNotFound.Marshal())
 				return
@@ -219,6 +215,8 @@ func GetUserBalance(s ServiceInterface) http.HandlerFunc {
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
 		}
+		logrus.Infof("User balance: %v", res.Current)
+		logrus.Infof("User balance: %v", res.Withdrawn)
 
 		_, err = w.Write(b)
 		if err != nil {
@@ -259,11 +257,11 @@ func CreateUserWithdraw(s ServiceInterface) http.HandlerFunc {
 		if errors.As(err, &appErr) {
 			if errors.Is(err, appErrors.ErrNotEnoughPoints) {
 				w.WriteHeader(http.StatusPaymentRequired)
-				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
+				_, err = w.Write(appErrors.ErrNotEnoughPoints.Marshal())
 				return
 			} else if errors.Is(err, appErrors.ErrInvalidOrderNumber) {
 				w.WriteHeader(http.StatusUnprocessableEntity)
-				_, err = w.Write(appErrors.ErrOrderNotFound.Marshal())
+				_, err = w.Write(appErrors.ErrInvalidOrderNumber.Marshal())
 				return
 			}
 		} else if err != nil {
@@ -291,11 +289,7 @@ func GetUserWithdraw(s ServiceInterface) http.HandlerFunc {
 		res, err := s.GetUserWithdrawn(ctx, UID)
 
 		if errors.As(err, &appErr) {
-			if errors.Is(err, appErrors.ErrInvalidLoginOrPass) {
-				w.WriteHeader(http.StatusUnauthorized)
-				_, err = w.Write(appErrors.ErrInvalidLoginOrPass.Marshal())
-				return
-			} else if errors.Is(err, appErrors.ErrOrderNotFound) {
+			if errors.Is(err, appErrors.ErrOrderNotFound) {
 				w.WriteHeader(http.StatusNoContent)
 				_, err = w.Write(appErrors.ErrOrderNotFound.Marshal())
 				return
