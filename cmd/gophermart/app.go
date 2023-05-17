@@ -21,13 +21,14 @@ import (
 func initApp(c config.Config) error {
 
 	logrus.SetFormatter(new(logrus.JSONFormatter))
+	ctxb := context.Background()
 
 	db := store.NewPostgres(store.MustPostgresConnection(c))
 	storeApp := store.NewStore(*db)
-	serviceApp := service.NewService(&storeApp, c)
+	serviceApp := service.NewService(ctxb, &storeApp, c)
 	router := setupAPI(serviceApp)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctxb, 10*time.Second)
 	defer cancel()
 
 	cancelChan := make(chan os.Signal, 1)
@@ -63,17 +64,17 @@ func initApp(c config.Config) error {
 	return nil
 }
 
-func setupAPI(s service.Service) *mux.Router {
+func setupAPI(s *service.Service) *mux.Router {
 
 	router := mux.NewRouter()
 	router.Use(middleware.CheckToken)
-	router.HandleFunc("/api/user/register", handler.RegisterUser(&s)).Methods(http.MethodPost)
-	router.HandleFunc("/api/user/login", handler.LoginUser(&s)).Methods(http.MethodPost)
-	router.HandleFunc("/api/user/orders", handler.CreateOrder(&s)).Methods(http.MethodPost)
-	router.HandleFunc("/api/user/orders", handler.GetUserOrders(&s)).Methods(http.MethodGet)
-	router.HandleFunc("/api/user/balance", handler.GetUserBalance(&s)).Methods(http.MethodGet)
-	router.HandleFunc("/api/user/balance/withdraw", handler.CreateUserWithdraw(&s)).Methods(http.MethodPost)
-	router.HandleFunc("/api/user/withdrawals", handler.GetUserWithdraw(&s)).Methods(http.MethodGet)
+	router.HandleFunc("/api/user/register", handler.RegisterUser(s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/login", handler.LoginUser(s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/orders", handler.CreateOrder(s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/orders", handler.GetUserOrders(s)).Methods(http.MethodGet)
+	router.HandleFunc("/api/user/balance", handler.GetUserBalance(s)).Methods(http.MethodGet)
+	router.HandleFunc("/api/user/balance/withdraw", handler.CreateUserWithdraw(s)).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/withdrawals", handler.GetUserWithdraw(s)).Methods(http.MethodGet)
 
 	return router
 

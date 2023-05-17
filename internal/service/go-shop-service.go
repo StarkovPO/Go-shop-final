@@ -14,9 +14,14 @@ import (
 )
 
 const (
-	salt       = "nalfhdp1238valls"
-	signingKey = "qiausydigswig104#hlk[pzxn"
-	tokenTTL   = 12 * time.Hour
+	salt             = "nalfhdp1238valls"
+	signingKey       = "qiausydigswig104#hlk[pzxn"
+	tokenTTL         = 12 * time.Hour
+	registeredStatus = "REGISTERED"
+	processingStatus = "PROCESSING"
+	invalidStatus    = "INVALID"
+	processedStatus  = "PROCESSED"
+	sleepTime        = 5 * time.Second
 )
 
 type StoreInterface interface {
@@ -34,8 +39,9 @@ type StoreInterface interface {
 }
 
 type Service struct {
-	store  StoreInterface
-	config config.Config
+	store      StoreInterface
+	config     config.Config
+	updateChan chan int
 }
 
 type TokenClaims struct {
@@ -43,11 +49,17 @@ type TokenClaims struct {
 	UserID string `json:"user_id"`
 }
 
-func NewService(s StoreInterface, c config.Config) Service {
-	return Service{
-		store:  s,
-		config: c,
+func NewService(ctx context.Context, s StoreInterface, c config.Config) *Service {
+	updateChan := make(chan int)
+	srv := Service{
+		store:      s,
+		config:     c,
+		updateChan: updateChan,
 	}
+
+	go srv.updater(ctx, updateChan, c.AccrualSystemAddressValue)
+
+	return &srv
 }
 
 func (s *Service) CreateUser(ctx context.Context, req models.Users) (string, error) {
@@ -113,16 +125,11 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	if err != nil {
 		return err
 	}
+	logrus.Infof("order status: %v", res.Status)
+	if res.Status == registeredStatus || res.Status == processingStatus {
 
-	if res.Status == "" || res.Status == "REGISTERED" || res.Status == "PROCESSING" {
-		statusChan := make(chan int)
-		orderID, err := strconv.Atoi(res.ID)
-		if err != nil {
-			return err
-		}
-		statusChan <- orderID
+		s.updateChan <- intId
 
-		go s.updater(ctx, statusChan, s.config.AccrualSystemAddressValue)
 	}
 
 	res.UserID = req.UserID
@@ -144,43 +151,45 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 }
 
 func (s *Service) updater(ctx context.Context, orderIDChan chan int, baseurl string) {
-
-	done := make(chan bool)
 	g, _ := errgroup.WithContext(ctx)
+
 	logrus.Info("updater start")
-	for id := range orderIDChan {
-		id := id
+
+	for id := range orderIDChan { // попробовать добавить worker pool в будущем
+		orderID := id
+
 		g.Go(func() error {
-			time.Sleep(5 * time.Second)
+			time.Sleep(sleepTime)
 			logrus.Info("gorutine sending request")
-			res, err := getLoyaltySystem(ctx, id, baseurl)
+
+			res, err := getLoyaltySystem(ctx, orderID, baseurl)
 			if err != nil {
 				logrus.Errorf("fatal fetching new order status: %v", err)
 				return err
 			}
-			if res.Status == "INVALID" || res.Status == "PROCESSED" {
+
+			if res.Status == invalidStatus || res.Status == processedStatus {
 				logrus.Info("gorutine starting update status")
-				err = s.store.UpdateOrderStatus(ctx, res.Status, res.ID)
-				if err != nil {
+				if err := s.store.UpdateOrderStatus(ctx, res.Status, res.ID); err != nil {
 					logrus.Errorf("fatal updating Order status: %v", err)
 					return err
 				}
+
 				logrus.Info("gorutine updated order status")
-			} else {
-				logrus.Info("gorutine got not final status")
-				orderIDChan <- id
+				return nil
 			}
-			done <- true
+
+			logrus.Info("gorutine got not final status")
+			orderIDChan <- id
+
 			return nil
 		})
 	}
 
-	go func() {
-		if err := g.Wait(); err != nil {
-			logrus.Errorf("unexpected error: %v", err)
-		}
-		done <- true
-	}()
+	if err := g.Wait(); err != nil {
+		logrus.Errorf("unexpected error: %v", err)
+	}
+
 }
 
 func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Orders, error) {
