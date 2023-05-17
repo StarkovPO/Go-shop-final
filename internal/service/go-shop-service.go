@@ -129,7 +129,7 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	res.ID = req.ID
 	logrus.Infof("order id: %v", res.ID)
 	logrus.Infof("order status: %v", res.Status)
-	if res.Status == registeredStatus || res.Status == processingStatus {
+	if res.Status == registeredStatus || res.Status == processingStatus || res.Status == "" {
 
 		s.updateChan <- res
 

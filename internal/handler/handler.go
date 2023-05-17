@@ -175,7 +175,7 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 		w.Header().Set("Content-type", "application/json")
 
 		b, err := json.Marshal(res)
-		logrus.Infof("Order ID: %v", string(b))
+		logrus.Infof("User orders: %v", string(b))
 		if err != nil {
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return
