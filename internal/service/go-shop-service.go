@@ -21,7 +21,7 @@ const (
 	processingStatus = "PROCESSING"
 	invalidStatus    = "INVALID"
 	processedStatus  = "PROCESSED"
-	sleepTime        = 5 * time.Second
+	sleepTime        = 50 * time.Millisecond
 )
 
 type StoreInterface interface {
