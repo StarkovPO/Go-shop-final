@@ -41,7 +41,7 @@ type StoreInterface interface {
 type Service struct {
 	store      StoreInterface
 	config     config.Config
-	updateChan chan int
+	updateChan chan models.OrderFromService
 }
 
 type TokenClaims struct {
@@ -50,7 +50,7 @@ type TokenClaims struct {
 }
 
 func NewService(ctx context.Context, s StoreInterface, c config.Config) *Service {
-	updateChan := make(chan int)
+	updateChan := make(chan models.OrderFromService)
 	srv := Service{
 		store:      s,
 		config:     c,
@@ -120,20 +120,21 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 		return appErrors.ErrInvalidOrderNumber
 	}
 	/* it works only with external service */
-	res, err := getLoyaltySystem(ctx, intId, s.config.AccrualSystemAddressValue)
+	res, err := getLoyaltySystem(ctx, req.ID, s.config.AccrualSystemAddressValue)
 
 	if err != nil {
 		return err
 	}
+	res.UserID = req.UserID
+	res.ID = req.ID
+	logrus.Infof("order id: %v", res.ID)
 	logrus.Infof("order status: %v", res.Status)
 	if res.Status == registeredStatus || res.Status == processingStatus {
 
-		s.updateChan <- intId
+		s.updateChan <- res
 
 	}
 
-	res.UserID = req.UserID
-	res.ID = req.ID
 	err = s.store.CreateUserOrderDB(ctx, res)
 
 	if err != nil {
@@ -150,37 +151,51 @@ func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error 
 	return nil
 }
 
-func (s *Service) updater(ctx context.Context, orderIDChan chan int, baseurl string) {
+func (s *Service) updater(ctx context.Context, orderChan chan models.OrderFromService, baseurl string) {
 	g, _ := errgroup.WithContext(ctx)
 
 	logrus.Info("updater start")
 
-	for id := range orderIDChan { // попробовать добавить worker pool в будущем
-		orderID := id
+	for o := range orderChan { // попробовать добавить worker pool в будущем
+		order := o
 
 		g.Go(func() error {
 			time.Sleep(sleepTime)
 			logrus.Info("gorutine sending request")
 
-			res, err := getLoyaltySystem(ctx, orderID, baseurl)
+			res, err := getLoyaltySystem(ctx, order.ID, baseurl)
 			if err != nil {
 				logrus.Errorf("fatal fetching new order status: %v", err)
 				return err
 			}
 
-			if res.Status == invalidStatus || res.Status == processedStatus {
-				logrus.Info("gorutine starting update status")
+			switch {
+			case res.Status == invalidStatus:
+				logrus.Info("order with invalid status")
+
 				if err := s.store.UpdateOrderStatus(ctx, res.Status, res.ID); err != nil {
 					logrus.Errorf("fatal updating Order status: %v", err)
 					return err
 				}
+				return nil
 
-				logrus.Info("gorutine updated order status")
+			case res.Status == processedStatus:
+				logrus.Info("order with processed status")
+
+				if err := s.store.UpdateOrderStatus(ctx, res.Status, order.ID); err != nil {
+					logrus.Errorf("fatal updating Order status: %v", err)
+					return err
+				}
+
+				if err := s.store.IncreaseUserBalance(ctx, res.Accrual, res.UserID); err != nil {
+					logrus.Errorf("fatal updating User balance: %v", err)
+					return err
+				}
 				return nil
 			}
 
 			logrus.Info("gorutine got not final status")
-			orderIDChan <- id
+			orderChan <- order
 
 			return nil
 		})

@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.OrderFromService, error) {
+func getLoyaltySystem(ctx context.Context, ID string, baseurl string) (models.OrderFromService, error) {
 	var order models.OrderFromService
 	client := &http.Client{}
 
@@ -32,8 +32,8 @@ func getLoyaltySystem(ctx context.Context, ID int, baseurl string) (models.Order
 
 	// {"level":"error","msg":"External service responce with code: 200 and body: {\"order\":\"40534687\",\"status\":\"PROCESSED\",\"accrual\":729.98}\n","time":"2023-05-14T07:20:11Z"}
 	if resp.StatusCode == http.StatusNoContent {
-		//b, _ := io.ReadAll(resp.Body)
-		//logrus.Printf("External service responce with code: 204 and body: %v", string(b))
+		b, _ := io.ReadAll(resp.Body)
+		logrus.Printf("External service responce with code: 204 and body: %v", string(b))
 		return models.OrderFromService{}, nil
 	}
 
