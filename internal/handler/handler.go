@@ -129,10 +129,6 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 				w.WriteHeader(http.StatusConflict)
 				_, err = w.Write(appErrors.ErrOrderAlreadyExist.Marshal())
 				return
-			} else if errors.Is(err, appErrors.ErrExternalService) {
-				w.WriteHeader(http.StatusAccepted)
-				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
-				return
 			} else if errors.Is(err, appErrors.ErrOrderAlreadyBelong) {
 				w.WriteHeader(http.StatusOK)
 				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())

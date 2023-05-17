@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -35,7 +34,7 @@ func getLoyaltySystem(ctx context.Context, ID string, baseurl string) (models.Or
 	if resp.StatusCode == http.StatusNoContent {
 		b, _ := io.ReadAll(resp.Body)
 		logrus.Printf("External service responce with code: 204 and body: %v", string(b))
-		return models.OrderFromService{}, appErrors.ErrExternalService
+		return models.OrderFromService{}, nil
 	}
 
 	if resp.StatusCode != http.StatusOK {
