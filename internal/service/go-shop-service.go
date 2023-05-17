@@ -21,7 +21,7 @@ const (
 	processingStatus = "PROCESSING"
 	invalidStatus    = "INVALID"
 	processedStatus  = "PROCESSED"
-	sleepTime        = 50 * time.Millisecond
+	sleepTime        = 5 * time.Millisecond
 )
 
 type StoreInterface interface {
@@ -160,7 +160,7 @@ func (s *Service) updater(ctx context.Context, orderChan chan models.OrderFromSe
 		order := o
 
 		g.Go(func() error {
-			time.Sleep(sleepTime)
+			//time.Sleep(sleepTime)
 			logrus.Info("gorutine sending request")
 
 			res, err := getLoyaltySystem(ctx, order.ID, baseurl)

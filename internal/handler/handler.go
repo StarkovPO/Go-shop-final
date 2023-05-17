@@ -115,7 +115,7 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
-
+		logrus.Infof("Order ID in Handler: %v", ID)
 		req := models.Orders{UserID: UID, ID: ID}
 
 		err := s.CreateUserOrder(ctx, req)
