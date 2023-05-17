@@ -129,6 +129,10 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 				w.WriteHeader(http.StatusConflict)
 				_, err = w.Write(appErrors.ErrOrderAlreadyExist.Marshal())
 				return
+			} else if errors.Is(err, appErrors.ErrExternalService) {
+				w.WriteHeader(http.StatusAccepted)
+				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
+				return
 			} else if errors.Is(err, appErrors.ErrOrderAlreadyBelong) {
 				w.WriteHeader(http.StatusOK)
 				_, err = w.Write(appErrors.ErrOrderAlreadyBelong.Marshal())
@@ -171,7 +175,7 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 		w.Header().Set("Content-type", "application/json")
 
 		b, err := json.Marshal(res)
-		logrus.Infof("Order ID: %v", b)
+		logrus.Infof("Order ID: %v", string(b))
 		if err != nil {
 			http.Error(w, "Server error", http.StatusInternalServerError)
 			return

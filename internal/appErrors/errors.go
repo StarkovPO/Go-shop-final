@@ -17,6 +17,7 @@ var (
 	ErrOrderNotFound      = NewAppError(nil, "User's order not found", "Nothing returned from DB")
 	ErrNotEnoughPoints    = NewAppError(nil, "Not enough to write off points", "User send tried to write off more that have")
 	ErrWithdrawnNotFound  = NewAppError(nil, "User withdrawn not found", "DB returned 0 row")
+	ErrExternalService    = NewAppError(nil, "external service response 204 and empty body", "skipp this order id")
 )
 
 type AppError struct {
