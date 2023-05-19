@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	RUN_ADDRESS_KEY            = "RUN_ADDRESS"
-	DATABASE_URI_KEY           = "DATABASE_URI"
-	ACCRUAL_SYSTEM_ADDRESS_KEY = "ACCRUAL_SYSTEM_ADDRESS"
+	RunAddressKey           = "RUN_ADDRESS"
+	DatabaseUriKey          = "DATABASE_URI"
+	AccrualSystemAddressKey = "ACCRUAL_SYSTEM_ADDRESS"
 )
 
 type Config struct {
@@ -47,9 +47,9 @@ func ReadFlags(c Config) error {
 func Init() (Config, error) {
 
 	c := NewConfig()
-	c.RunAddressValue = os.Getenv(RUN_ADDRESS_KEY)
-	c.DatabaseURIValue = os.Getenv(DATABASE_URI_KEY)
-	c.AccrualSystemAddressValue = os.Getenv(ACCRUAL_SYSTEM_ADDRESS_KEY)
+	c.RunAddressValue = os.Getenv(RunAddressKey)
+	c.DatabaseURIValue = os.Getenv(DatabaseUriKey)
+	c.AccrualSystemAddressValue = os.Getenv(AccrualSystemAddressKey)
 
 	if c.RunAddressValue == "" || c.DatabaseURIValue == "" || c.AccrualSystemAddressValue == "" {
 		if err := ReadFlags(*c); err != nil {

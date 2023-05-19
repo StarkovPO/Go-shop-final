@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
+	"github.com/StarkovPO/Go-shop-final/internal/apperrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -28,7 +28,7 @@ func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 		return err
 	}
 
-	_, err = stmt.ExecContext(ctx, user.Id, user.Login, user.Password, timestamp)
+	_, err = stmt.ExecContext(ctx, user.ID, user.Login, user.Password, timestamp)
 	if err != nil {
 		logrus.Errorf("unhandled error: %v", err)
 		return err
@@ -46,6 +46,10 @@ func (o *Store) CheckLogin(ctx context.Context, login string) bool {
 	var exist bool
 
 	stmt, err := o.store.db.PrepareContext(ctx, checkLogin)
+
+	if err != nil {
+		logrus.Errorf("error with stmt: %v", err)
+	}
 
 	err = stmt.QueryRowContext(ctx, login).Scan(&exist)
 
@@ -69,6 +73,10 @@ func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
 
 	stmt, err := o.store.db.PrepareContext(ctx, getUserPass)
 
+	if err != nil {
+		logrus.Errorf("error with stmt: %v", err)
+	}
+
 	err = stmt.QueryRowContext(ctx, login).Scan(&hash)
 
 	if err != nil {
@@ -91,6 +99,12 @@ func (o *Store) CreateUserOrderDB(ctx context.Context, order models.OrderFromSer
 	timestamp := time.Now().Unix()
 
 	stmt, err := o.store.db.PrepareContext(ctx, createOrder)
+
+	if err != nil {
+		logrus.Errorf("error with stmt: %v", err)
+		return err
+	}
+
 	stmt2, err := o.store.db.PrepareContext(ctx, getUserFromOrders)
 	if err != nil {
 		logrus.Errorf("error with stmt: %v", err)
@@ -104,10 +118,10 @@ func (o *Store) CreateUserOrderDB(ctx context.Context, order models.OrderFromSer
 			err = stmt2.QueryRowContext(ctx, order.ID).Scan(&UID)
 			if UID != order.UserID {
 				logrus.Printf("Order belong to user %v, but got: %v", UID, order.UserID)
-				return appErrors.ErrOrderAlreadyExist
+				return apperrors.ErrOrderAlreadyExist
 			} else if UID == order.UserID {
 				logrus.Printf("Order belong to user %v", order.UserID)
-				return appErrors.ErrOrderAlreadyBelong
+				return apperrors.ErrOrderAlreadyBelong
 			} else {
 				logrus.Errorf("ops unhandled error:%v", err)
 				return err
@@ -161,6 +175,11 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error {
 
 	stmt, err := o.store.db.PrepareContext(ctx, createUserBalance)
+
+	if err != nil {
+		logrus.Errorf("error with stmt: %v", err)
+		return err
+	}
 
 	_, err = stmt.ExecContext(ctx, UID, accrual, 0)
 

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
+	"github.com/StarkovPO/Go-shop-final/internal/apperrors"
 	"github.com/StarkovPO/Go-shop-final/internal/config"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/dgrijalva/jwt-go"
@@ -65,14 +65,14 @@ func NewService(ctx context.Context, s StoreInterface, c config.Config) *Service
 func (s *Service) CreateUser(ctx context.Context, req models.Users) (string, error) {
 
 	if exist := s.store.CheckLogin(ctx, req.Login); exist { // remove checker and use DB index
-		return "", appErrors.ErrLoginAlreadyExist
+		return "", apperrors.ErrLoginAlreadyExist
 	}
 
 	req.Password = generatePasswordHash(req.Password)
-	req.Id = generateUID()
+	req.ID = generateUID()
 
 	if err := s.store.CreateUserDB(ctx, req); err != nil {
-		return "", appErrors.ErrCreateUser
+		return "", apperrors.ErrCreateUser
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
@@ -80,7 +80,7 @@ func (s *Service) CreateUser(ctx context.Context, req models.Users) (string, err
 			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		req.Id,
+		req.ID,
 	})
 
 	return token.SignedString([]byte(signingKey))
@@ -90,7 +90,7 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 
 	passwordHash, exist := s.store.GetUserPass(ctx, req.Login)
 	if !exist {
-		return "", appErrors.ErrInvalidLoginOrPass
+		return "", apperrors.ErrInvalidLoginOrPass
 	}
 
 	isPassValid := comparePasswordHash(passwordHash, req.Password)
@@ -110,14 +110,14 @@ func (s *Service) GenerateUserToken(ctx context.Context, req models.Users) (stri
 
 		return token.SignedString([]byte(signingKey))
 	}
-	return "", appErrors.ErrInvalidLoginOrPass
+	return "", apperrors.ErrInvalidLoginOrPass
 }
 
 func (s *Service) CreateUserOrder(ctx context.Context, req models.Orders) error {
 
-	intId, _ := strconv.Atoi(req.ID)
-	if !IsOrderNumberValid(intId) {
-		return appErrors.ErrInvalidOrderNumber
+	intID, _ := strconv.Atoi(req.ID)
+	if !IsOrderNumberValid(intID) {
+		return apperrors.ErrInvalidOrderNumber
 	}
 	/* it works only with external service */
 	res, err := getLoyaltySystem(ctx, req.ID, s.config.AccrualSystemAddressValue)
@@ -219,7 +219,7 @@ func (s *Service) GetUserOrders(ctx context.Context, UID string) ([]models.Order
 		return req, nil
 	}
 
-	return req, appErrors.ErrOrderNotFound
+	return req, apperrors.ErrOrderNotFound
 }
 
 func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balance, error) {
@@ -235,9 +235,9 @@ func (s *Service) GetUserBalance(ctx context.Context, UID string) (models.Balanc
 
 func (s *Service) CreateUserWithdraw(ctx context.Context, req models.Withdrawn) error {
 
-	intId, _ := strconv.Atoi(req.OrderID)
-	if !IsOrderNumberValid(intId) {
-		return appErrors.ErrInvalidOrderNumber
+	intID, _ := strconv.Atoi(req.OrderID)
+	if !IsOrderNumberValid(intID) {
+		return apperrors.ErrInvalidOrderNumber
 	}
 
 	b, err := s.store.GetUserBalanceDB(ctx, req.UserID)
@@ -248,10 +248,15 @@ func (s *Service) CreateUserWithdraw(ctx context.Context, req models.Withdrawn) 
 	}
 
 	if b.Current < req.Withdrawn {
-		return appErrors.ErrNotEnoughPoints
+		return apperrors.ErrNotEnoughPoints
 	}
 
 	err = s.store.CreateWithdraw(ctx, req)
+
+	if err != nil {
+		logrus.Errorf("ops unhandled error on service level: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -267,5 +272,5 @@ func (s *Service) GetUserWithdrawn(ctx context.Context, UID string) ([]models.Wi
 		return res, err
 	}
 
-	return res, appErrors.ErrWithdrawnNotFound
+	return res, apperrors.ErrWithdrawnNotFound
 }

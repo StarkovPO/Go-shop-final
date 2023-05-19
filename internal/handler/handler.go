@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/StarkovPO/Go-shop-final/internal/appErrors"
+	"github.com/StarkovPO/Go-shop-final/internal/apperrors"
 	"github.com/StarkovPO/Go-shop-final/internal/models"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	appErr *appErrors.AppError
+	appErr *apperrors.AppError
 )
 
 type ServiceInterface interface {
@@ -31,20 +31,20 @@ func RegisterUser(s ServiceInterface) http.HandlerFunc {
 		ctx := r.Context()
 
 		if r.Header.Get("Content-Type") != "application/json" {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
 		token, err := s.CreateUser(ctx, req)
 
 		if err != nil {
-			appErrors.HandleError(w, err)
+			apperrors.HandleError(w, err)
 			return
 		}
 		w.Header().Set("Authorization", token)
@@ -58,20 +58,20 @@ func LoginUser(s ServiceInterface) http.HandlerFunc {
 		ctx := r.Context()
 
 		if r.Header.Get("Content-Type") != "application/json" {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
 		token, err := s.GenerateUserToken(ctx, req)
 
 		if err != nil {
-			appErrors.HandleError(w, err)
+			apperrors.HandleError(w, err)
 			return
 		}
 
@@ -83,13 +83,13 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Header.Get("Content-Type") != "text/plain" {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if r.Header.Get("Authorization") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
-			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -100,7 +100,7 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 		ID := string(body)
 
 		if ID == "" {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 		logrus.Infof("Order ID in Handler: %v", ID)
@@ -109,7 +109,7 @@ func CreateOrder(s ServiceInterface) http.HandlerFunc {
 		err := s.CreateUserOrder(ctx, req)
 
 		if err != nil {
-			appErrors.HandleError(w, err)
+			apperrors.HandleError(w, err)
 			return
 		}
 		w.WriteHeader(http.StatusAccepted)
@@ -121,7 +121,7 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 
 		if r.Header.Get("Authorization") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
-			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -131,7 +131,7 @@ func GetUserOrders(s ServiceInterface) http.HandlerFunc {
 		res, err := s.GetUserOrders(ctx, UID)
 
 		if err != nil {
-			appErrors.HandleError(w, err)
+			apperrors.HandleError(w, err)
 			return
 		}
 
@@ -157,7 +157,7 @@ func GetUserBalance(s ServiceInterface) http.HandlerFunc {
 
 		if r.Header.Get("Authorization") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
-			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -195,12 +195,12 @@ func CreateUserWithdraw(s ServiceInterface) http.HandlerFunc {
 
 		if r.Header.Get("Authorization") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
-			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if r.Header.Get("Content-Type") != "application/json" {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -212,7 +212,7 @@ func CreateUserWithdraw(s ServiceInterface) http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			http.Error(w, appErrors.ErrBadRequest.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -220,7 +220,7 @@ func CreateUserWithdraw(s ServiceInterface) http.HandlerFunc {
 		err = s.CreateUserWithdraw(ctx, req)
 
 		if err != nil {
-			appErrors.HandleError(w, err)
+			apperrors.HandleError(w, err)
 			return
 		}
 
@@ -232,7 +232,7 @@ func GetUserWithdraw(s ServiceInterface) http.HandlerFunc {
 
 		if r.Header.Get("Authorization") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
-			http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+			http.Error(w, apperrors.ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -243,7 +243,7 @@ func GetUserWithdraw(s ServiceInterface) http.HandlerFunc {
 		res, err := s.GetUserWithdrawn(ctx, UID)
 
 		if err != nil {
-			appErrors.HandleError(w, err)
+			apperrors.HandleError(w, err)
 			return
 		}
 
