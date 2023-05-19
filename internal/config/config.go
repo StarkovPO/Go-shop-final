@@ -9,7 +9,7 @@ import (
 
 const (
 	RunAddressKey           = "RUN_ADDRESS"
-	DatabaseUriKey          = "DATABASE_URI"
+	DatabaseURIKey          = "DATABASE_URI"
 	AccrualSystemAddressKey = "ACCRUAL_SYSTEM_ADDRESS"
 )
 
@@ -48,7 +48,7 @@ func Init() (Config, error) {
 
 	c := NewConfig()
 	c.RunAddressValue = os.Getenv(RunAddressKey)
-	c.DatabaseURIValue = os.Getenv(DatabaseUriKey)
+	c.DatabaseURIValue = os.Getenv(DatabaseURIKey)
 	c.AccrualSystemAddressValue = os.Getenv(AccrualSystemAddressKey)
 
 	if c.RunAddressValue == "" || c.DatabaseURIValue == "" || c.AccrualSystemAddressValue == "" {

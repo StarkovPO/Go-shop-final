@@ -155,6 +155,11 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 
 	stmt, err := o.store.db.PrepareContext(ctx, getUserID)
 
+	if err != nil {
+		logrus.Errorf("error with stmt: %v", err)
+		return "", err
+	}
+
 	err = stmt.QueryRowContext(ctx, login).Scan(&UID)
 
 	if err != nil {
@@ -188,6 +193,11 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 		if d != "pq: duplicate key value violates unique constraint \"user_id_key\"" {
 			logrus.Infof("handled error: %v", err)
 			stmt, err = o.store.db.PrepareContext(ctx, increaseUserBalance)
+
+			if err != nil {
+				logrus.Errorf("error with stmt: %v", err)
+				return err
+			}
 
 			_, err = stmt.ExecContext(ctx, UID, accrual)
 
