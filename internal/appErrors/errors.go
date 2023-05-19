@@ -2,7 +2,9 @@ package appErrors
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 var (
@@ -46,4 +48,34 @@ func (e *AppError) Marshal() []byte {
 		return nil
 	}
 	return marshal
+}
+
+func HandleError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, ErrBadRequest):
+		http.Error(w, ErrBadRequest.Error(), http.StatusBadRequest)
+	case errors.Is(err, ErrLoginAlreadyExist):
+		http.Error(w, ErrLoginAlreadyExist.Error(), http.StatusBadRequest)
+	case errors.Is(err, ErrCreateUser):
+		http.Error(w, ErrCreateUser.Error(), http.StatusInternalServerError)
+	case errors.Is(err, ErrInvalidAuthHeader):
+		http.Error(w, ErrInvalidAuthHeader.Error(), http.StatusBadRequest)
+	case errors.Is(err, ErrInvalidLoginOrPass):
+		http.Error(w, ErrInvalidLoginOrPass.Error(), http.StatusBadRequest)
+	case errors.Is(err, ErrInvalidOrderNumber):
+		http.Error(w, ErrInvalidOrderNumber.Error(), http.StatusUnprocessableEntity)
+	case errors.Is(err, ErrOrderAlreadyExist):
+		http.Error(w, ErrOrderAlreadyExist.Error(), http.StatusConflict)
+	case errors.Is(err, ErrOrderAlreadyBelong):
+		http.Error(w, ErrOrderAlreadyBelong.Error(), http.StatusOK)
+	case errors.Is(err, ErrOrderNotFound):
+		http.Error(w, ErrOrderNotFound.Error(), http.StatusNotFound)
+	case errors.Is(err, ErrNotEnoughPoints):
+		http.Error(w, ErrNotEnoughPoints.Error(), http.StatusBadRequest)
+	case errors.Is(err, ErrWithdrawnNotFound):
+		http.Error(w, ErrWithdrawnNotFound.Error(), http.StatusNotFound)
+	default:
+		logrus.Errorf("Unhandled error: %v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
 }
