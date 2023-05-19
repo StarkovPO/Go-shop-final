@@ -11,18 +11,18 @@ import (
 )
 
 type Store struct {
-	db Postgres
+	store Postgres
 }
 
 func NewStore(db Postgres) Store {
-	return Store{db: db}
+	return Store{store: db}
 }
 
 func (o *Store) CreateUserDB(ctx context.Context, user models.Users) error {
 
 	timestamp := time.Now().Unix()
 
-	stmt, err := o.db.db.PrepareContext(ctx, createUser)
+	stmt, err := o.store.db.PrepareContext(ctx, createUser)
 	if err != nil {
 		logrus.Errorf("unhandled error: %v", err)
 		return err
@@ -45,7 +45,7 @@ func (o *Store) CheckLogin(ctx context.Context, login string) bool {
 
 	var exist bool
 
-	stmt, err := o.db.db.PrepareContext(ctx, checkLogin)
+	stmt, err := o.store.db.PrepareContext(ctx, checkLogin)
 
 	err = stmt.QueryRowContext(ctx, login).Scan(&exist)
 
@@ -67,7 +67,7 @@ func (o *Store) GetUserPass(ctx context.Context, login string) (string, bool) {
 
 	var hash string
 
-	stmt, err := o.db.db.PrepareContext(ctx, getUserPass)
+	stmt, err := o.store.db.PrepareContext(ctx, getUserPass)
 
 	err = stmt.QueryRowContext(ctx, login).Scan(&hash)
 
@@ -90,8 +90,8 @@ func (o *Store) CreateUserOrderDB(ctx context.Context, order models.OrderFromSer
 
 	timestamp := time.Now().Unix()
 
-	stmt, err := o.db.db.PrepareContext(ctx, createOrder)
-	stmt2, err := o.db.db.PrepareContext(ctx, getUserFromOrders)
+	stmt, err := o.store.db.PrepareContext(ctx, createOrder)
+	stmt2, err := o.store.db.PrepareContext(ctx, getUserFromOrders)
 	if err != nil {
 		logrus.Errorf("error with stmt: %v", err)
 		return err
@@ -126,7 +126,7 @@ func (o *Store) GetUserOrders(ctx context.Context, UID string) ([]models.Orders,
 
 	var orders []models.Orders
 
-	err := o.db.db.SelectContext(ctx, &orders, getOrders, UID)
+	err := o.store.db.SelectContext(ctx, &orders, getOrders, UID)
 
 	if err != nil {
 		logrus.Errorf("unhandled error: %v", err)
@@ -139,7 +139,7 @@ func (o *Store) GetUserOrders(ctx context.Context, UID string) ([]models.Orders,
 func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 	var UID string
 
-	stmt, err := o.db.db.PrepareContext(ctx, getUserID)
+	stmt, err := o.store.db.PrepareContext(ctx, getUserID)
 
 	err = stmt.QueryRowContext(ctx, login).Scan(&UID)
 
@@ -160,7 +160,7 @@ func (o *Store) GetUserID(ctx context.Context, login string) (string, error) {
 
 func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID string) error {
 
-	stmt, err := o.db.db.PrepareContext(ctx, createUserBalance)
+	stmt, err := o.store.db.PrepareContext(ctx, createUserBalance)
 
 	_, err = stmt.ExecContext(ctx, UID, accrual, 0)
 
@@ -168,7 +168,7 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 		d := err.Error()
 		if d != "pq: duplicate key value violates unique constraint \"user_id_key\"" {
 			logrus.Infof("handled error: %v", err)
-			stmt, err = o.db.db.PrepareContext(ctx, increaseUserBalance)
+			stmt, err = o.store.db.PrepareContext(ctx, increaseUserBalance)
 
 			_, err = stmt.ExecContext(ctx, UID, accrual)
 
@@ -186,7 +186,7 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 
 func (o *Store) DecreaseUserBalance(ctx context.Context, withdrawn float64, UID string) error {
 
-	stmt, err := o.db.db.PrepareContext(ctx, decreaseUserBalance)
+	stmt, err := o.store.db.PrepareContext(ctx, decreaseUserBalance)
 
 	if err != nil {
 		logrus.Errorf("ops unhandled error: %v", err)
@@ -206,7 +206,7 @@ func (o *Store) DecreaseUserBalance(ctx context.Context, withdrawn float64, UID 
 func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balance, error) {
 	var balance models.Balance
 
-	err := o.db.db.GetContext(ctx, &balance, getUserBalance, UID)
+	err := o.store.db.GetContext(ctx, &balance, getUserBalance, UID)
 
 	if err != nil {
 
@@ -224,7 +224,7 @@ func (o *Store) GetUserBalanceDB(ctx context.Context, UID string) (models.Balanc
 
 func (o *Store) IncreaseUserWithdrawn(ctx context.Context, withdrawn float64, UID string) error {
 
-	stmt, err := o.db.db.PrepareContext(ctx, increaseUserWithdrawn)
+	stmt, err := o.store.db.PrepareContext(ctx, increaseUserWithdrawn)
 
 	if err != nil {
 		logrus.Errorf("ops unhandled error: %v", err)
@@ -244,7 +244,7 @@ func (o *Store) IncreaseUserWithdrawn(ctx context.Context, withdrawn float64, UI
 func (o *Store) CreateWithdraw(ctx context.Context, req models.Withdrawn) error {
 
 	timestamp := time.Now().Unix()
-	stmt, err := o.db.db.PrepareContext(ctx, createUserWithdrawn)
+	stmt, err := o.store.db.PrepareContext(ctx, createUserWithdrawn)
 
 	if err != nil {
 		logrus.Errorf("unexpected error: %v", err)
@@ -273,7 +273,7 @@ func (o *Store) CreateWithdraw(ctx context.Context, req models.Withdrawn) error 
 func (o *Store) GetUserWithdrawnDB(ctx context.Context, UID string) ([]models.Withdrawn, error) {
 	var withdrawn []models.Withdrawn
 
-	err := o.db.db.SelectContext(ctx, &withdrawn, getUserWithdrawn, UID)
+	err := o.store.db.SelectContext(ctx, &withdrawn, getUserWithdrawn, UID)
 
 	if err != nil {
 		logrus.Errorf("unhandled error: %v", err)
@@ -285,7 +285,7 @@ func (o *Store) GetUserWithdrawnDB(ctx context.Context, UID string) ([]models.Wi
 
 func (o *Store) UpdateOrderStatus(ctx context.Context, status string, UID string) error {
 
-	stmt, err := o.db.db.PrepareContext(ctx, updateOrderStatus)
+	stmt, err := o.store.db.PrepareContext(ctx, updateOrderStatus)
 
 	if err != nil {
 		logrus.Errorf("ops unhandled error: %v", err)
