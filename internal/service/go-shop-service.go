@@ -24,6 +24,7 @@ const (
 	sleepTime        = 5 * time.Second
 )
 
+//go:generate mockgen -source=go-shop-service.go -destination=mocks/mock_service.go
 type StoreInterface interface {
 	CreateUserDB(ctx context.Context, user models.Users) error
 	CheckLogin(ctx context.Context, login string) bool
@@ -63,6 +64,10 @@ func NewService(ctx context.Context, s StoreInterface, c config.Config) *Service
 }
 
 func (s *Service) CreateUser(ctx context.Context, req models.Users) (string, error) {
+
+	if req.Login == "" || req.Password == "" {
+		return "", apperrors.ErrBadRequest
+	}
 
 	if exist := s.store.CheckLogin(ctx, req.Login); exist { // remove checker and use DB index
 		return "", apperrors.ErrLoginAlreadyExist

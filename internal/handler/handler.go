@@ -14,6 +14,7 @@ var (
 	appErr *apperrors.AppError
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/mock_handler.go
 type ServiceInterface interface {
 	CreateUser(ctx context.Context, req models.Users) (string, error)
 	GenerateUserToken(ctx context.Context, req models.Users) (string, error)

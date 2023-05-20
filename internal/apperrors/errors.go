@@ -55,7 +55,7 @@ func HandleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, ErrBadRequest):
 		http.Error(w, ErrBadRequest.Error(), http.StatusBadRequest)
 	case errors.Is(err, ErrLoginAlreadyExist):
-		http.Error(w, ErrLoginAlreadyExist.Error(), http.StatusBadRequest)
+		http.Error(w, ErrLoginAlreadyExist.Error(), http.StatusConflict)
 	case errors.Is(err, ErrCreateUser):
 		http.Error(w, ErrCreateUser.Error(), http.StatusInternalServerError)
 	case errors.Is(err, ErrInvalidAuthHeader):
