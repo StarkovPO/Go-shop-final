@@ -72,9 +72,6 @@ func MakeDB(db sqlx.DB) error {
 	if _, err := db.Exec(createWithdrawForeignKey); err != nil {
 		return fmt.Errorf("error while run migrations %v", err)
 	}
-	//if _, err := db.Exec(createWithdrawForeignKey2); err != nil {
-	//	return fmt.Errorf("error while run migrations %v", err)
-	//}
 
 	if _, err := db.Exec(createLoginIndex); err != nil {
 		return fmt.Errorf("error while run migrations %v", err)

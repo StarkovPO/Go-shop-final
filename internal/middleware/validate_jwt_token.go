@@ -15,17 +15,6 @@ func CheckToken(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		//headerParts := strings.Split(token, " ")
-		//
-		//if len(headerParts) != 2 {
-		//
-		//	logrus.Infof("%v", appErrors.ErrInvalidAuthHeader.DevMsg)
-		//	http.Error(w, appErrors.ErrInvalidAuthHeader.Error(), http.StatusUnauthorized)
-		//	return
-		//}
-		//
-		//UID, err := parseToken(headerParts[1])
 		UID, err := parseToken(token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

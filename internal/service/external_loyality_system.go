@@ -30,7 +30,6 @@ func getLoyaltySystem(ctx context.Context, ID string, baseurl string) (models.Or
 		return models.OrderFromService{}, err
 	}
 
-	// {"level":"error","msg":"External service responce with code: 200 and body: {\"order\":\"40534687\",\"status\":\"PROCESSED\",\"accrual\":729.98}\n","time":"2023-05-14T07:20:11Z"}
 	if resp.StatusCode == http.StatusNoContent {
 		b, _ := io.ReadAll(resp.Body)
 		logrus.Printf("External service responce with code: 204 and body: %v", string(b))
