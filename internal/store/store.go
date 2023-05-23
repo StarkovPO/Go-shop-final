@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const duplicateUserBalance = "pq: duplicate key value violates unique constraint \"user_id_key\""
+
 type Store struct {
 	store Postgres
 }
@@ -189,8 +191,7 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 	_, err = stmt.ExecContext(ctx, UID, accrual, 0)
 
 	if err != nil {
-		d := err.Error()
-		if d != "pq: duplicate key value violates unique constraint \"user_id_key\"" {
+		if err.Error() != duplicateUserBalance {
 			logrus.Infof("handled error: %v", err)
 			stmt, err = o.store.db.PrepareContext(ctx, increaseUserBalance)
 
@@ -205,12 +206,13 @@ func (o *Store) IncreaseUserBalance(ctx context.Context, accrual float64, UID st
 				logrus.Errorf("ops unhandled error: %v", err)
 				return err
 			}
+			return nil
 		}
 		logrus.Errorf("ops unhandled error: %v", err)
 		return err
 	}
-
 	return nil
+
 }
 
 func (o *Store) DecreaseUserBalance(ctx context.Context, withdrawn float64, UID string) error {
