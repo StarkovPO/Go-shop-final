@@ -1,7 +1,8 @@
 package models
 
 type Balance struct {
-	UserId    string  `json:"-"`
-	Current   float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
+	PrimaryID string  `json:"-" db:"primary_id"`
+	UserID    string  `json:"-" db:"user_id"`
+	Current   float64 `json:"current" db:"current"`
+	Withdrawn float64 `json:"withdrawn" db:"withdrawn"`
 }
